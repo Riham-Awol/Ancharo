@@ -357,7 +357,16 @@ p { margin: 0 0 1em; }
   border-top: 1px solid rgba(255,255,255,.1); margin-top: 40px; padding-top: 22px;
   font-size: .85rem; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap;
 }
-@media (max-width: 760px) { .footer-grid { grid-template-columns: 1fr; gap: 28px; } }
+/* Phones: logo + text on top, then Explore and Contact side by side */
+@media (max-width: 760px) {
+  .footer-grid { grid-template-columns: 1fr 1fr; gap: 28px 20px; }
+  .footer-grid > :first-child { grid-column: 1 / -1; }
+  .site-footer li { overflow-wrap: anywhere; }
+}
+@media (max-width: 400px) {
+  .footer-grid { gap: 24px 12px; }
+  .site-footer ul { font-size: .9rem; }
+}
 
 /* ---------- Toast ---------- */
 .toast {
@@ -942,3 +951,6 @@ body.home::before {
 .signin-help { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--gold-soft); font-size: .95rem; }
 
 .site-footer { padding-bottom: calc(30px + env(safe-area-inset-bottom, 0px)); }
+@media (max-width: 820px) {
+  .site-footer { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } /* room for the floating Donate button */
+}
