@@ -164,7 +164,10 @@ document.querySelectorAll(".ba").forEach((ba) => {
 /* ---------- Floating donate button (phones) ---------- */
 const fab = document.querySelector(".fab-donate");
 if (fab) {
-  const onScroll = () => fab.classList.toggle("is-visible", window.scrollY > 400);
+  // Stay hidden while the big picture at the top is on screen; slide in after scrolling past it.
+  const top = document.querySelector("main > .hero, main > .page-hero");
+  const limit = () => (top ? top.offsetTop + top.offsetHeight - 80 : 400);
+  const onScroll = () => fab.classList.toggle("is-visible", window.scrollY > limit());
   window.addEventListener("scroll", onScroll, { passive: true });
   onScroll();
 }

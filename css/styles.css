@@ -791,9 +791,12 @@ p { margin: 0 0 1em; }
   .avatar { width: 38px; height: 38px; font-size: .85rem; }
 }
 @media (max-width: 600px) {
-  .hero { height: auto; min-height: calc(100svh - 170px); }
-  .progress-card { margin-top: -110px; }
-  .hero__content { padding: 110px 0 100px; }
+  /* Phones: the hero fills the screen on its own; the fundraising card comes after it */
+  .hero { height: auto; min-height: 100svh; }
+  .hero__content { padding: 110px 0 56px; }
+  .hero__actions { margin-top: 28px; }
+  .progress-card { margin-top: 0; }
+  .progress-wrap { padding-top: 32px; }
 }
 .announce-bar { position: relative; }
 html.i18n-loading body { visibility: hidden; }
