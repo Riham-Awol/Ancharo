@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>About — Ancharo</title>
   <meta name="description" content="The story of Ancharo and the community campaign to rebuild our city." />
+  <meta name="theme-color" content="#2f5d46" />
+  <!-- Link preview when shared on WhatsApp, Telegram, Facebook… -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Rebuild Ancharo" />
+  <meta property="og:title" content="About — Ancharo" />
+  <meta property="og:description" content="The story of Ancharo and the community campaign to rebuild our city." />
+  <meta property="og:image" content="/images/og-image.png" />
+  <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -74,6 +82,23 @@
     <section class="section">
       <div class="container">
         <div class="section__head reveal">
+          <span class="eyebrow">Campaign journey</span>
+          <h2>Where we are so far</h2>
+        </div>
+        <!-- Mark finished steps with class="is-done", the current one with class="is-now". -->
+        <ol class="timeline">
+          <li class="is-done reveal"><span class="timeline__dot"></span><span class="timeline__date">September 2026</span><h3>Primary school renovated</h3><p>New roof, fresh paint and 80 desks, our first fully community-funded project.</p></li>
+          <li class="is-done reveal"><span class="timeline__dot"></span><span class="timeline__date">October 2026</span><h3>City clean-up day</h3><p>Hundreds of volunteers cleaned the streets, planted trees and painted the market.</p></li>
+          <li class="is-now reveal"><span class="timeline__dot"></span><span class="timeline__date">October 2026 – now</span><h3>Main road repair, phase one</h3><p>The first 2 km of the main road are being drained and resurfaced.</p></li>
+          <li class="reveal"><span class="timeline__dot"></span><span class="timeline__date">Early 2027</span><h3>Solar street lights</h3><p>40 lights for the market road and the main square.</p></li>
+          <li class="reveal"><span class="timeline__dot"></span><span class="timeline__date">2027</span><h3>Clean water points</h3><p>12 new public water points across the town's neighbourhoods.</p></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="section section--sand">
+      <div class="container">
+        <div class="section__head reveal">
           <span class="eyebrow">Our goals</span>
           <h2>What success looks like</h2>
         </div>
@@ -86,7 +111,7 @@
       </div>
     </section>
 
-    <section class="section section--sand">
+    <section class="section">
       <div class="container">
         <div class="cta-band reveal">
           <div>
@@ -135,6 +160,8 @@
       </div>
     </div>
   </footer>
+
+  <a class="fab-donate" href="donate.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.5-9.2C1 8.3 3.2 5 6.6 5c2 0 3.5 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.6 3.3 4.1 6.8C19.5 16.4 12 21 12 21Z"/></svg>Donate</a>
 
   <script src="js/main.js"></script>
 </body>

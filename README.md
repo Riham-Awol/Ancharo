@@ -1,7 +1,8 @@
 # Rebuild Ancharo
 
 A simple website for the campaign to raise money and renew the city of Ancharo.
-It is plain HTML, CSS and JavaScript, with no build step, so you can open `index.html` in a browser or host it anywhere (for example GitHub Pages).
+It is plain HTML, CSS and JavaScript, with no build step. It's hosted on **Vercel**: every push to GitHub redeploys it automatically.
+You can also just open `index.html` in a browser to preview it.
 
 ## Pages
 
@@ -13,6 +14,28 @@ It is plain HTML, CSS and JavaScript, with no build step, so you can open `index
 | `about.html`   | The city's story, how the campaign works, goals |
 | `donate.html`  | Bank accounts with copy buttons, mobile money, international transfer, how to give |
 
+## Features
+
+- **Fundraising progress** with animated counters and a countdown to the campaign end date
+- **Impact calculator**: visitors type an amount and see what it pays for (desks, textbooks, drainage, street lights)
+- **Before / after slider** to show a project's results
+- **Supporters wall**: a scrolling thank-you list of donors
+- **Share buttons** (WhatsApp, Telegram, Facebook, X, copy link) and a **QR code** on the donate page that can be downloaded for posters
+- **Link previews**: a picture and title appear when the link is shared in chats and social media
+- **Campaign timeline** on the About page
+- **Floating Donate button** on phones, a friendly **404 page**, and a hero banner that always fits the screen (also at 125% / 150% display scaling)
+
+## Where to edit things
+
+Everything you'll update regularly is at the **top of `js/main.js`**:
+
+| What | Setting |
+|------|---------|
+| Money raised, goal, donor count, last-updated date | `FUNDRAISER` |
+| Countdown end date | `FUNDRAISER.deadline` (set to `""` to hide) |
+| Names on the supporters wall | `SUPPORTERS`: only list people who agreed, use "Anonymous" otherwise. The current entries are **samples**. |
+| Prices used by the impact calculator | `IMPACT`: set these to real local costs |
+
 ## Before you publish: things to replace
 
 1. **Bank accounts** in `donate.html`. The numbers shown (`1000 0000 0000 0` etc.) are placeholders.
@@ -23,11 +46,21 @@ It is plain HTML, CSS and JavaScript, with no build step, so you can open `index
 4. **News and featured works**: the sample stories are examples. Edit or replace them with real updates.
 5. **Photos**: the images in `images/` are illustrated placeholders. Add real photos (e.g. `images/market-day.jpg`) and update the `src="..."` paths.
    The big home banner is set in `css/styles.css` under `.hero` (`url("../images/hero.svg")`).
+   The before/after slider on the home page uses `images/road-before.svg` and `images/roadwork.svg`. Use two photos taken from the same spot.
+   Keep photos under about 300 KB each (resize to ~1600 px wide) so the site loads fast on mobile data.
+6. **Link preview image**: in each page's `<head>`, `og:image` is `/images/og-image.png`. Some apps (Facebook) need the full address,
+   e.g. `https://your-site.vercel.app/images/og-image.png`.
 
 ## Changing the look
 
 All colors are defined at the top of `css/styles.css` under `:root`.
 
-## Publishing on GitHub Pages
+## Hosting on Vercel
 
-In the repository on GitHub: **Settings → Pages → Build and deployment → Deploy from a branch**, select your branch and `/ (root)`, then save.
+`vercel.json` turns on clean URLs (`/donate` instead of `/donate.html`), caches images, and adds basic security headers.
+`404.html` is shown automatically for pages that don't exist.
+In Vercel, the project's **Framework Preset** should be **Other**, with no build command and the output directory left empty (the repository root).
+
+## Credits
+
+QR codes are generated with [qrcode-generator](https://github.com/kazuhikoarase/qrcode-generator) by Kazuhiko Arase (MIT license), bundled in `js/vendor/qrcode.js`.

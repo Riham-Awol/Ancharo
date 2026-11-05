@@ -1,14 +1,38 @@
 /* ==========================================================
-   FUNDRAISING NUMBERS — update these as donations come in.
-   They show on the home page progress bar.
+   ✏️  EDIT THESE — everything you'll update regularly is here.
    ========================================================== */
+
+/* Fundraising numbers (home page progress card). */
 const FUNDRAISER = {
-  raised: 1250000,      // amount collected so far
-  goal: 5000000,        // target amount
-  donors: 342,          // number of people who have given
+  raised: 1250000,          // amount collected so far
+  goal: 5000000,            // target amount
+  donors: 342,              // number of people who have given
   currency: "ETB",
-  updated: "November 2026",
+  updated: "November 2026", // when you last updated these numbers
+  deadline: "2027-06-30",   // campaign end date (YYYY-MM-DD) for the countdown, or "" to hide it
 };
+
+/* Supporters wall on the home page. Newest first.
+   Only add people who agreed to be listed. Use "Anonymous" for anyone else.
+   Leave the list empty [] to hide the section. These are SAMPLE entries, replace them. */
+const SUPPORTERS = [
+  { name: "Anonymous", amount: 5000 },
+  { name: "A friend in Addis Ababa", amount: 2000 },
+  { name: "Family in Dessie", amount: 10000 },
+  { name: "Anonymous", amount: 1000 },
+  { name: "Supporter in Dubai", amount: 7500 },
+  { name: "Supporter in Washington DC", amount: 15000 },
+  { name: "Anonymous", amount: 500 },
+  { name: "A teacher from Ancharo", amount: 1500 },
+];
+
+/* Impact calculator: what one unit of each thing costs (in the currency above). */
+const IMPACT = [
+  { cost: 250,   one: "set of textbooks for a student", many: "sets of textbooks for students", icon: "book" },
+  { cost: 500,   one: "new school desk",                many: "new school desks",               icon: "desk" },
+  { cost: 2000,  one: "metre of road drainage",         many: "metres of road drainage",        icon: "road" },
+  { cost: 15000, one: "solar street light",             many: "solar street lights",            icon: "light" },
+];
 
 /* ---------- Mobile menu ---------- */
 const toggle = document.querySelector(".nav__toggle");
@@ -23,18 +47,101 @@ if (toggle && links) {
 /* ---------- Footer year ---------- */
 document.querySelectorAll("[data-year]").forEach((el) => (el.textContent = new Date().getFullYear()));
 
-/* ---------- Fundraising progress ---------- */
-const fmt = (n) => n.toLocaleString("en-US");
+/* ---------- Fundraising progress (with count-up animation) ---------- */
+const fmt = (n) => Math.round(n).toLocaleString("en-US");
+const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 const pct = Math.min(100, Math.round((FUNDRAISER.raised / FUNDRAISER.goal) * 100));
-const setText = (sel, val) => document.querySelectorAll(sel).forEach((el) => (el.textContent = val));
-setText("[data-raised]", `${fmt(FUNDRAISER.raised)} ${FUNDRAISER.currency}`);
-setText("[data-goal]", `${fmt(FUNDRAISER.goal)} ${FUNDRAISER.currency}`);
-setText("[data-donors]", fmt(FUNDRAISER.donors));
-setText("[data-percent]", `${pct}%`);
-setText("[data-updated]", FUNDRAISER.updated);
-document.querySelectorAll(".bar__fill").forEach((bar) => {
-  requestAnimationFrame(() => setTimeout(() => (bar.style.width = pct + "%"), 150));
+
+function countUp(el, target, suffix = "") {
+  if (reduceMotion) { el.textContent = fmt(target) + suffix; return; }
+  const start = performance.now(), dur = 1600;
+  const tick = (now) => {
+    const t = Math.min(1, (now - start) / dur);
+    el.textContent = fmt(target * (1 - Math.pow(1 - t, 3))) + suffix;
+    if (t < 1) requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+}
+const cur = " " + FUNDRAISER.currency;
+document.querySelectorAll("[data-raised]").forEach((el) => countUp(el, FUNDRAISER.raised, cur));
+document.querySelectorAll("[data-goal]").forEach((el) => (el.textContent = fmt(FUNDRAISER.goal) + cur));
+document.querySelectorAll("[data-donors]").forEach((el) => countUp(el, FUNDRAISER.donors));
+document.querySelectorAll("[data-percent]").forEach((el) => (el.textContent = pct + "%"));
+document.querySelectorAll("[data-updated]").forEach((el) => (el.textContent = FUNDRAISER.updated));
+document.querySelectorAll(".bar__fill").forEach((bar) => setTimeout(() => (bar.style.width = pct + "%"), 150));
+
+/* Countdown to campaign deadline */
+document.querySelectorAll("[data-countdown]").forEach((el) => {
+  if (!FUNDRAISER.deadline) return el.remove();
+  const days = Math.ceil((new Date(FUNDRAISER.deadline + "T23:59:59") - new Date()) / 86400000);
+  if (days < 0) return el.remove();
+  el.textContent = days === 0 ? "⏳ Last day!" : `⏳ ${fmt(days)} day${days === 1 ? "" : "s"} left`;
 });
+
+/* ---------- Supporters wall ---------- */
+document.querySelectorAll("[data-supporters]").forEach((wrap) => {
+  const section = wrap.closest("section");
+  if (!SUPPORTERS.length) return section && section.remove();
+  const initials = (n) => n === "Anonymous" ? "♥" : n.split(/\s+/).filter((w) => /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join("") || "♥";
+  const pill = (d) =>
+    `<div class="supporter"><span class="supporter__avatar">${initials(d.name)}</span>` +
+    `<span class="supporter__name">${d.name.replace(/</g, "&lt;")}</span>` +
+    (d.amount ? `<span class="supporter__amt">${fmt(d.amount)} ${FUNDRAISER.currency}</span>` : "") + `</div>`;
+  const items = SUPPORTERS.map(pill).join("");
+  // The list is repeated once so the scrolling loop is seamless.
+  wrap.innerHTML = `<div class="supporters__track">${items}<div style="display:contents" aria-hidden="true">${items}</div></div>`;
+});
+
+/* ---------- Impact calculator ---------- */
+const ICONS = {
+  book: '<path d="M4 19.5V5a2 2 0 0 1 2-2h14v16H6a2 2 0 0 0-2 2Zm0 0A2 2 0 0 0 6 22h14"/>',
+  desk: '<path d="M3 8h18M5 8v12M19 8v12M5 14h14"/>',
+  road: '<path d="M4 21 9 3M20 21 15 3M12 5v2M12 11v2M12 17v2"/>',
+  light: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.7.7 1 1.5 1 2.5h6c0-1 .3-1.8 1-2.5A6 6 0 0 0 12 3Z"/>',
+};
+document.querySelectorAll("[data-impact]").forEach((box) => {
+  const input = box.querySelector(".impact__amount input");
+  const range = box.querySelector(".impact__range");
+  const list = box.querySelector(".impact__list");
+  const presets = box.querySelectorAll("[data-amount]");
+  box.querySelectorAll("[data-currency]").forEach((el) => (el.textContent = FUNDRAISER.currency));
+  const render = (amount) => {
+    amount = Math.max(0, Number(amount) || 0);
+    list.innerHTML = IMPACT.map((it) => {
+      const n = amount / it.cost;
+      const whole = Math.floor(n);
+      const text = whole >= 1
+        ? `<div class="impact__num">${fmt(whole)}</div><div class="impact__label">${whole === 1 ? it.one : it.many}</div>`
+        : `<div class="impact__num">${Math.round(n * 100)}%</div><div class="impact__label">of a ${it.one}</div>`;
+      return `<li class="impact__item"><span class="impact__icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ICONS[it.icon] || ""}</svg></span>` +
+        `<div>${text}${whole < 1 ? `<div class="mini-bar"><span style="width:${Math.round(n * 100)}%"></span></div>` : ""}</div></li>`;
+    }).join("");
+    presets.forEach((b) => b.classList.toggle("is-active", Number(b.dataset.amount) === amount));
+  };
+  input.addEventListener("input", () => { range.value = input.value; render(input.value); });
+  range.addEventListener("input", () => { input.value = range.value; render(range.value); });
+  presets.forEach((b) => b.addEventListener("click", () => {
+    input.value = range.value = b.dataset.amount;
+    render(b.dataset.amount);
+  }));
+  render(input.value);
+});
+
+/* ---------- Before / after slider ---------- */
+document.querySelectorAll(".ba").forEach((ba) => {
+  const range = ba.querySelector(".ba__range");
+  const set = (v) => ba.style.setProperty("--pos", v + "%");
+  range.addEventListener("input", () => set(range.value));
+  set(range.value);
+});
+
+/* ---------- Floating donate button (phones) ---------- */
+const fab = document.querySelector(".fab-donate");
+if (fab) {
+  const onScroll = () => fab.classList.toggle("is-visible", window.scrollY > 400);
+  window.addEventListener("scroll", onScroll, { passive: true });
+  onScroll();
+}
 
 /* ---------- Reveal on scroll ---------- */
 const revealEls = document.querySelectorAll(".reveal");
@@ -147,4 +254,59 @@ if (lb && items.length) {
     if (e.key === "ArrowLeft") show(current - 1);
     if (e.key === "ArrowRight") show(current + 1);
   });
+}
+
+/* ---------- Share buttons ---------- */
+const SITE_URL = location.protocol.startsWith("http") ? location.origin + "/" : location.href;
+document.querySelectorAll("[data-share]").forEach((box) => {
+  const text = box.dataset.share || "Help rebuild Ancharo!";
+  const url = encodeURIComponent(SITE_URL), msg = encodeURIComponent(text);
+  const links = {
+    whatsapp: `https://wa.me/?text=${msg}%20${url}`,
+    telegram: `https://t.me/share/url?url=${url}&text=${msg}`,
+    facebook: `https://www.facebook.com/sharer/sharer.php?u=${url}`,
+    x: `https://twitter.com/intent/tweet?text=${msg}&url=${url}`,
+  };
+  box.querySelectorAll("[data-share-to]").forEach((a) => {
+    a.href = links[a.dataset.shareTo];
+    a.target = "_blank";
+    a.rel = "noopener";
+  });
+  box.querySelectorAll("[data-share-copy]").forEach((b) => b.addEventListener("click", async () => {
+    try { await navigator.clipboard.writeText(SITE_URL); toast("Link copied, now paste it anywhere!"); }
+    catch { prompt("Copy this link:", SITE_URL); }
+  }));
+  box.querySelectorAll("[data-share-native]").forEach((b) => {
+    if (!navigator.share) return b.remove();
+    b.addEventListener("click", () => navigator.share({ title: document.title, text, url: SITE_URL }).catch(() => {}));
+  });
+});
+
+/* ---------- QR code (donate page) — uses js/vendor/qrcode.js ---------- */
+const qrBox = document.querySelector("[data-qr]");
+if (qrBox && window.qrcode) {
+  const qr = qrcode(0, "M");
+  qr.addData(SITE_URL);
+  qr.make();
+  const n = qr.getModuleCount(), cell = 12, margin = 2, size = (n + margin * 2) * cell;
+  const canvas = document.createElement("canvas");
+  canvas.width = canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#ffffff";
+  ctx.fillRect(0, 0, size, size);
+  ctx.fillStyle = "#1f2a24";
+  for (let r = 0; r < n; r++)
+    for (let c = 0; c < n; c++)
+      if (qr.isDark(r, c)) ctx.fillRect((c + margin) * cell, (r + margin) * cell, cell, cell);
+  canvas.setAttribute("role", "img");
+  canvas.setAttribute("aria-label", "QR code linking to " + SITE_URL);
+  qrBox.appendChild(canvas);
+  document.querySelector("[data-qr-download]")?.addEventListener("click", () => {
+    const a = document.createElement("a");
+    a.href = canvas.toDataURL("image/png");
+    a.download = "ancharo-donate-qr.png";
+    a.click();
+  });
+} else if (qrBox) {
+  qrBox.closest(".qr")?.remove();
 }
