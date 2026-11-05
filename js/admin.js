@@ -8,6 +8,7 @@
   const A = window.Ancharo;
   const live = window.AncharoLive;
   const { esc, fmt, toast } = A;
+  const T = window.T;
   const $ = (sel, root = document) => root.querySelector(sel);
   const $$ = (sel, root = document) => [...root.querySelectorAll(sel)];
   const views = {};
@@ -35,14 +36,14 @@
         $("[data-denied-msg]").textContent = "Please sign in with an admin account.";
         return;
       }
-      const { data } = await sb.from("profiles").select("id,full_name,role").eq("id", session.user.id).maybeSingle();
+      const { data } = await sb.from("profiles").select("id,full_name,phone,role").eq("id", session.user.id).maybeSingle();
       if (!data || data.role !== "admin") {
         show("denied");
         $("[data-denied-msg]").textContent = "Your account doesn't have admin access. Ask an existing admin to give you the admin role.";
         return;
       }
       me = { ...data, email: session.user.email };
-      $("[data-admin-who]").textContent = "Signed in as " + (me.full_name || me.email);
+      $("[data-admin-who]").textContent = T("Signed in as {name}", { name: me.full_name || live.formatPhone(data.phone) });
       show("admin");
       await loadSettings();
       openTab(location.hash.slice(1) || "overview");
@@ -101,7 +102,13 @@
 
     /* ======================= OVERVIEW ======================= */
     loaders.overview = async () => {
-      const [stats, pending] = await Promise.all([sb.rpc("public_stats"), sb.rpc("admin_list_donations", { status_filter: "pending" })]);
+      const [stats, pending, pledges, vols] = await Promise.all([
+        sb.rpc("public_stats"), sb.rpc("admin_list_donations", { status_filter: "pending" }), sb.rpc("admin_list_adoptions"), sb.rpc("admin_list_volunteers"),
+      ]);
+      const newPledges = (pledges.data || []).filter((x) => x.status === "pending").length;
+      const newVols = (vols.data || []).filter((x) => x.status === "new").length;
+      setCount("[data-pledge-badge]", newPledges);
+      setCount("[data-volunteer-badge]", newVols);
       const s = stats.data || {};
       const p = pending.data || [];
       setBadge(p.length);
@@ -111,14 +118,17 @@
         ["Donors", fmt(s.donors || 0), "approved donations + offline"],
         ["Waiting for review", fmt(p.length), p.length ? "needs your attention" : "all caught up ✓"],
         ["Spent", `${fmt(s.spent || 0)} ${esc(s.currency || "")}`, `${fmt(Math.max(0, (s.raised || 0) - (s.spent || 0)))} available`],
+        ["Volunteers", fmt((vols.data || []).length), newVols ? `${newVols} new to call` : "all contacted ✓"],
+        ["Project pledges", fmt((pledges.data || []).length), newPledges ? `${newPledges} to confirm` : "all confirmed ✓"],
       ]
         .map(([k, v, sub]) => `<div class="kpi"><div class="kpi__label">${k}</div><div class="kpi__value">${v}</div><div class="kpi__sub">${sub}</div></div>`)
         .join("");
       $("[data-overview-pending]").innerHTML = p.length
-        ? `<div class="admin-list">${p.slice(0, 6).map((d) => `<div class="admin-row"><div><strong>${fmt(d.amount)} ${esc(cur())}</strong> from ${esc(d.donor_name || d.donor_email || "Unknown")}<div class="muted">${esc(d.method)} · submitted ${fmtDate(d.created_at)}</div></div></div>`).join("")}</div>`
+        ? `<div class="admin-list">${p.slice(0, 6).map((d) => `<div class="admin-row"><div><strong>${fmt(d.amount)} ${esc(cur())}</strong> · ${esc(d.donor_name || "Unknown")}<div class="muted">${esc(d.method)} · submitted ${fmtDate(d.created_at)}</div></div></div>`).join("")}</div>`
         : `<div class="empty">Nothing to review right now 🎉</div>`;
     };
-    const setBadge = (n) => { const b = $("[data-pending-badge]"); b.hidden = !n; b.textContent = n; };
+    const setCount = (sel, n) => { const b = $(sel); b.hidden = !n; b.textContent = n; };
+    const setBadge = (n) => setCount("[data-pending-badge]", n);
 
     /* ======================= DONATIONS ======================= */
     let donations = [];
@@ -143,7 +153,7 @@
 
     function renderDonations() {
       const q = $("[data-donation-search]").value.trim().toLowerCase();
-      const rows = donations.filter((d) => !q || [d.donor_name, d.donor_email, d.donor_phone, d.reference, d.method, d.message].join(" ").toLowerCase().includes(q));
+      const rows = donations.filter((d) => !q || [d.donor_name, d.donor_phone, d.reference, d.method, d.message, d.project_title].join(" ").toLowerCase().includes(q));
       const list = $("[data-donation-list]");
       if (!rows.length) return (list.innerHTML = `<div class="empty">${statusFilter === "pending" ? "No receipts waiting for review 🎉" : "Nothing here."}</div>`);
       const STATUS = { pending: ["Pending", "tag--progress"], approved: ["Approved", "tag--done"], rejected: ["Rejected", "tag--planned"] };
@@ -158,12 +168,13 @@
               <div class="review__top">
                 <div>
                   <div class="review__amount">${fmt(d.amount)} ${esc(cur())}</div>
-                  <div><strong>${esc(d.donor_name || "(no name)")}</strong> <span class="muted">${esc(d.donor_email || "")}${d.donor_phone ? " · " + esc(d.donor_phone) : ""}</span></div>
+                  <div><strong>${esc(d.donor_name || "(no name)")}</strong> <a class="muted" href="tel:+${esc(d.donor_phone || "")}">${esc(live.formatPhone(d.donor_phone))}</a></div>
                 </div>
                 <span class="tag ${cls}">${label}</span>
               </div>
               <dl class="review__facts">
                 <div><dt>Method</dt><dd>${esc(d.method || "–")}</dd></div>
+                <div><dt>For</dt><dd>${esc(d.project_title || "General fund")}</dd></div>
                 <div><dt>Sent on</dt><dd>${d.donated_on ? fmtDate(d.donated_on) : "–"}</dd></div>
                 <div><dt>Reference</dt><dd>${esc(d.reference || "–")}</dd></div>
                 <div><dt>Submitted</dt><dd>${fmtDate(d.created_at)}</dd></div>
@@ -214,7 +225,7 @@
     });
 
     $("[data-export]").addEventListener("click", () => {
-      const cols = ["id", "created_at", "status", "amount", "method", "reference", "donated_on", "donor_name", "donor_email", "donor_phone", "show_name", "display_name", "message", "admin_note", "reviewed_at"];
+      const cols = ["id", "created_at", "status", "amount", "project_title", "method", "reference", "donated_on", "donor_name", "donor_phone", "show_name", "display_name", "message", "admin_note", "reviewed_at"];
       const cell = (v) => {
         let s = v == null ? "" : String(v);
         if (/^[=+\-@]/.test(s)) s = "'" + s; // stop spreadsheet formulas
@@ -272,6 +283,9 @@
         postForm.title.value = p.title;
         postForm.tag.value = p.tag;
         postForm.body.value = p.body;
+        postForm.title_am.value = p.title_am || "";
+        postForm.body_am.value = p.body_am || "";
+        postForm.querySelector(".am-fields").open = !!(p.title_am || p.body_am);
         postForm.pinned.checked = p.pinned;
         postForm.published.checked = p.published;
         postForm.remove_image.checked = false;
@@ -305,6 +319,8 @@
           title: f.get("title").trim(),
           tag: f.get("tag").trim() || "News",
           body: f.get("body"),
+          title_am: f.get("title_am").trim() || null,
+          body_am: f.get("body_am").trim() || null,
           pinned: f.get("pinned") === "on",
           published: f.get("published") === "on",
         };
@@ -500,35 +516,265 @@
     $("[data-user-search]").addEventListener("input", () => renderUsers());
     function renderUsers() {
       const q = $("[data-user-search]").value.trim().toLowerCase();
-      const rows = users.filter((u) => !q || [u.full_name, u.email, u.phone].join(" ").toLowerCase().includes(q));
+      const rows = users.filter((u) => !q || [u.full_name, u.phone, live.formatPhone(u.phone)].join(" ").toLowerCase().includes(q));
       $("[data-user-rows]").innerHTML = rows.length
         ? rows
             .map(
               (u) => `<tr data-id="${u.id}">
                 <td data-label="Name">${esc(u.full_name || "–")}</td>
-                <td data-label="Email">${esc(u.email)}</td>
-                <td data-label="Phone">${esc(u.phone || "–")}</td>
+                <td data-label="Phone"><a href="tel:+${esc(u.phone || "")}">${esc(live.formatPhone(u.phone) || "–")}</a></td>
                 <td data-label="Joined">${fmtDate(u.created_at)}</td>
                 <td data-label="Confirmed" class="num">${fmt(u.approved_total)} ${esc(cur())} <span class="muted">(${u.donations})</span></td>
                 <td data-label="Role">
                   <span class="tag ${u.role === "admin" ? "tag--done" : ""}">${u.role}</span>
                   ${u.id === me.id ? "" : `<button class="link-btn" type="button" data-act="role">${u.role === "admin" ? "Remove admin" : "Make admin"}</button>`}
                 </td>
+                <td data-label="Password">${u.id === me.id ? "" : '<button class="link-btn" type="button" data-act="resetpw">Reset to 123456</button>'}</td>
               </tr>`
             )
             .join("")
         : '<tr><td colspan="6" class="muted">No users found.</td></tr>';
     }
     $("[data-user-rows]").addEventListener("click", async (e) => {
-      const btn = e.target.closest('[data-act="role"]');
+      const btn = e.target.closest('[data-act="role"], [data-act="resetpw"]');
       if (!btn) return;
       const u = users.find((x) => x.id === btn.closest("[data-id]").dataset.id);
+      if (btn.dataset.act === "resetpw") {
+        if (!confirm(T("Reset the password of {name} to 123456? They will have to choose a new one when they sign in.", { name: u.full_name || live.formatPhone(u.phone) }))) return;
+        const { error } = await sb.rpc("admin_reset_password", { target: u.id });
+        return toast(error ? error.message : T("Done. Tell {name} to sign in with 123456.", { name: u.full_name || live.formatPhone(u.phone) }));
+      }
       const role = u.role === "admin" ? "user" : "admin";
-      if (!confirm(role === "admin" ? `Give ${u.email} full admin access?` : `Remove admin access from ${u.email}?`)) return;
+      const who = u.full_name || live.formatPhone(u.phone);
+      if (!confirm(role === "admin" ? T("Give {name} full admin access?", { name: who }) : T("Remove admin access from {name}?", { name: who }))) return;
       const { error } = await sb.from("profiles").update({ role }).eq("id", u.id);
       if (error) return toast(error.message);
       toast("Role updated");
       loaders.users();
+    });
+
+    /* ======================= PROJECTS + PLEDGES ======================= */
+    let projectsList = [];
+    let pledgesList = [];
+    const projectForm = forms.project;
+    const PSTATUS = { open: ["Needs funding", "tag--planned"], in_progress: ["In progress", "tag--progress"], completed: ["Completed", "tag--done"] };
+    loaders.projects = async () => {
+      const [pr, pl] = await Promise.all([sb.rpc("public_projects"), sb.rpc("admin_list_adoptions")]);
+      projectsList = pr.data || [];
+      pledgesList = pl.data || [];
+      setCount("[data-pledge-badge]", pledgesList.filter((x) => x.status === "pending").length);
+      $("[data-project-list]").innerHTML = projectsList.length
+        ? projectsList.map((p) => {
+            const pct = Math.min(100, Math.round((Number(p.raised) / Number(p.goal)) * 100));
+            return `<div class="admin-row" data-id="${p.id}">
+              ${p.image_url ? `<img class="admin-row__img" src="${esc(p.image_url)}" alt="" />` : ""}
+              <div class="grow"><strong>${esc(p.title)}</strong> <span class="tag ${PSTATUS[p.status][1]}">${PSTATUS[p.status][0]}</span>
+                <div class="mini-bar"><span style="width:${pct}%"></span></div>
+                <div class="muted">${fmt(p.raised)} / ${fmt(p.goal)} ${esc(cur())} raised · ${fmt(p.pledged)} pledged${p.adopters.length ? " · ♥ " + p.adopters.map(esc).join(", ") : ""}</div>
+              </div>
+              <div class="admin-row__btns"><button class="link-btn" type="button" data-act="edit">Edit</button><button class="link-btn link-btn--danger" type="button" data-act="delete">Delete</button></div>
+            </div>`;
+          }).join("")
+        : '<div class="empty">No projects yet. Add the first one with the form.</div>';
+      const PL = { pending: ["Waiting", "tag--progress"], confirmed: ["Confirmed", "tag--done"], cancelled: ["Cancelled", "tag--planned"] };
+      $("[data-pledge-list]").innerHTML = pledgesList.length
+        ? pledgesList.map((x) => `<div class="admin-row" data-id="${x.id}">
+            <div class="grow"><strong>${fmt(x.pledge)} ${esc(cur())}</strong> → ${esc(x.project_title)} <span class="tag ${PL[x.status][1]}">${PL[x.status][0]}</span>
+              <div class="muted">“${esc(x.display_name)}”${x.show_public ? "" : " (private)"} · ${esc(x.full_name || "")} · <a href="tel:+${esc(x.phone || "")}">${esc(live.formatPhone(x.phone))}</a> · ${fmtDate(x.created_at)}</div>
+              ${x.message ? `<div class="muted">💬 ${esc(x.message)}</div>` : ""}
+            </div>
+            <div class="admin-row__btns">
+              ${x.status !== "confirmed" ? '<button class="link-btn" type="button" data-act="confirm">Confirm</button>' : ""}
+              ${x.status !== "cancelled" ? '<button class="link-btn link-btn--danger" type="button" data-act="cancel">Cancel</button>' : ""}
+            </div>
+          </div>`).join("")
+        : '<div class="empty">No pledges yet.</div>';
+    };
+    const resetProject = () => {
+      projectForm.reset();
+      projectForm.id.value = "";
+      $("[data-project-heading]").textContent = "New project";
+      $("[data-project-cancel]").hidden = true;
+    };
+    $("[data-project-cancel]").addEventListener("click", resetProject);
+    $("[data-project-list]").addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      const p = projectsList.find((x) => String(x.id) === btn.closest("[data-id]").dataset.id);
+      if (btn.dataset.act === "edit") {
+        for (const k of ["id", "title", "title_am", "description", "description_am", "goal", "status"]) projectForm[k].value = p[k] ?? "";
+        const { data } = await sb.from("projects").select("sort").eq("id", p.id).maybeSingle();
+        projectForm.sort.value = data ? data.sort : 0;
+        projectForm.querySelector(".am-fields").open = !!(p.title_am || p.description_am);
+        $("[data-project-heading]").textContent = "Edit project";
+        $("[data-project-cancel]").hidden = false;
+        projectForm.scrollIntoView({ behavior: "smooth" });
+      }
+      if (btn.dataset.act === "delete") {
+        if (!confirm(T("Delete “{title}”? Its pledges are deleted too; donations stay but are no longer linked to it.", { title: p.title }))) return;
+        const { error } = await sb.from("projects").delete().eq("id", p.id);
+        if (error) return toast(error.message);
+        if (p.image_url) await removeMedia(p.image_url);
+        loaders.projects();
+      }
+    });
+    projectForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = new FormData(projectForm);
+      const id = f.get("id");
+      const msg = $("[data-project-msg]");
+      busy(projectForm, true);
+      try {
+        const row = {
+          title: f.get("title").trim(), title_am: f.get("title_am").trim() || null,
+          description: f.get("description").trim(), description_am: f.get("description_am").trim() || null,
+          goal: Number(f.get("goal")), status: f.get("status"), sort: Number(f.get("sort")) || 0,
+        };
+        const file = projectForm.image.files[0];
+        if (file) {
+          row.image_url = await uploadMedia(file, "projects");
+          const old = projectsList.find((x) => String(x.id) === id);
+          if (old && old.image_url) await removeMedia(old.image_url);
+        }
+        const res = id ? await sb.from("projects").update(row).eq("id", id) : await sb.from("projects").insert(row);
+        if (res.error) throw res.error;
+        say(msg, "Saved ✓ It's on the Get involved page.", "ok");
+        resetProject();
+        loaders.projects();
+      } catch (err) {
+        say(msg, err.message, "error");
+      } finally {
+        busy(projectForm, false);
+      }
+    });
+    $("[data-pledge-list]").addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      const id = btn.closest("[data-id]").dataset.id;
+      const status = btn.dataset.act === "confirm" ? "confirmed" : "cancelled";
+      const { error } = await sb.from("project_adoptions").update({ status }).eq("id", id);
+      toast(error ? error.message : status === "confirmed" ? "Pledge confirmed ✓ The name now shows on the project." : "Pledge cancelled");
+      loaders.projects();
+    });
+
+    /* ======================= VOTES ======================= */
+    let proposalsList = [];
+    loaders.votes = async () => {
+      const [pr, res] = await Promise.all([sb.from("proposals").select("*").order("created_at", { ascending: false }), sb.rpc("proposal_results")]);
+      proposalsList = pr.data || [];
+      const counts = {};
+      (res.data || []).forEach((r) => ((counts[r.proposal_id] ||= {})[r.choice] = Number(r.votes)));
+      $("[data-proposal-list]").innerHTML = proposalsList.length
+        ? proposalsList.map((p) => {
+            const c = counts[p.id] || {};
+            const total = Object.values(c).reduce((a, b) => a + b, 0);
+            const open = p.is_open && (!p.closes_at || new Date(p.closes_at) > new Date());
+            return `<div class="admin-row admin-row--block" data-id="${p.id}">
+              <div class="admin-row__top"><strong>${esc(p.title)}</strong> <span class="tag ${open ? "tag--progress" : ""}">${open ? "Open" : "Closed"}</span></div>
+              <div class="muted">${esc(T(total === 1 ? "{n} vote" : "{n} votes", { n: total }))}${p.closes_at ? " · " + esc(T("Voting closes {date}", { date: fmtDate(p.closes_at) })) : ""}</div>
+              <div class="results">${p.options.map((o, i) => {
+                const pct = total ? Math.round(((c[i] || 0) / total) * 100) : 0;
+                return `<div class="result"><span class="result__label">${esc(o)}</span><span class="result__bar"><span style="width:${pct}%"></span></span><span class="result__n">${c[i] || 0} · ${pct}%</span></div>`;
+              }).join("")}</div>
+              <div class="admin-row__btns">
+                <button class="link-btn" type="button" data-act="toggle">${p.is_open ? "Close voting" : "Reopen voting"}</button>
+                <button class="link-btn link-btn--danger" type="button" data-act="delete">Delete</button>
+              </div>
+            </div>`;
+          }).join("")
+        : '<div class="empty">No votes yet. Ask the community a question with the form.</div>';
+    };
+    forms.proposal.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const form = forms.proposal;
+      const f = new FormData(form);
+      const lines = (v) => String(v || "").split("\n").map((x) => x.trim()).filter(Boolean);
+      const options = lines(f.get("options"));
+      const optionsAm = lines(f.get("options_am"));
+      const msg = $("[data-proposal-msg]");
+      if (options.length < 2 || options.length > 10) return say(msg, "Please write 2 to 10 choices, one per line.", "error");
+      if (optionsAm.length && optionsAm.length !== options.length) return say(msg, "The Amharic choices must be the same number as the English ones.", "error");
+      busy(form, true);
+      try {
+        const file = form.image.files[0];
+        const row = {
+          title: f.get("title").trim(), title_am: f.get("title_am").trim() || null,
+          description: f.get("description").trim(), description_am: f.get("description_am").trim() || null,
+          options, options_am: optionsAm.length ? optionsAm : null,
+          closes_at: f.get("closes_at") ? new Date(f.get("closes_at") + "T23:59:59").toISOString() : null,
+          image_url: file ? await uploadMedia(file, "votes") : null,
+        };
+        const { error } = await sb.from("proposals").insert(row);
+        if (error) throw error;
+        say(msg, "Vote started ✓ It's on the Get involved page.", "ok");
+        form.reset();
+        loaders.votes();
+      } catch (err) {
+        say(msg, err.message, "error");
+      } finally {
+        busy(form, false);
+      }
+    });
+    $("[data-proposal-list]").addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      const p = proposalsList.find((x) => String(x.id) === btn.closest("[data-id]").dataset.id);
+      if (btn.dataset.act === "toggle") {
+        const { error } = await sb.from("proposals").update({ is_open: !p.is_open }).eq("id", p.id);
+        if (error) return toast(error.message);
+      }
+      if (btn.dataset.act === "delete") {
+        if (!confirm(T("Delete “{title}” and all its votes?", { title: p.title }))) return;
+        const { error } = await sb.from("proposals").delete().eq("id", p.id);
+        if (error) return toast(error.message);
+        if (p.image_url) await removeMedia(p.image_url);
+      }
+      loaders.votes();
+    });
+
+    /* ======================= VOLUNTEERS ======================= */
+    let volunteersList = [];
+    const VSTATUS = { new: "New", contacted: "Contacted", active: "Active" };
+    loaders.volunteers = async () => {
+      const { data, error } = await sb.rpc("admin_list_volunteers");
+      if (error) return ($("[data-volunteer-list]").innerHTML = `<p class="form-msg form-msg--error">${esc(error.message)}</p>`);
+      volunteersList = data || [];
+      setCount("[data-volunteer-badge]", volunteersList.filter((v) => v.status === "new").length);
+      renderVolunteers();
+    };
+    $("[data-volunteer-search]").addEventListener("input", () => renderVolunteers());
+    function renderVolunteers() {
+      const q = $("[data-volunteer-search]").value.trim().toLowerCase();
+      const rows = volunteersList.filter((v) => !q || [v.full_name, v.phone, v.profession, v.skills, v.location].join(" ").toLowerCase().includes(q));
+      $("[data-volunteer-list]").innerHTML = rows.length
+        ? rows.map((v) => `<article class="vol-card" data-id="${v.id}">
+            <div class="vol-card__top">
+              <span class="avatar avatar--static">${esc(live.initials(v.full_name))}</span>
+              <div class="grow"><strong>${esc(v.full_name || "–")}</strong><div class="muted">${esc(T(v.profession))}</div></div>
+              <select data-field="status" aria-label="Status">${Object.entries(VSTATUS).map(([k, l]) => `<option value="${k}" ${k === v.status ? "selected" : ""}>${l}</option>`).join("")}</select>
+            </div>
+            <a class="vol-card__phone" href="tel:+${esc(v.phone || "")}">📞 ${esc(live.formatPhone(v.phone))}</a>
+            ${v.skills ? `<p>${esc(v.skills)}</p>` : ""}
+            <div class="muted">${esc([v.availability, v.location].filter(Boolean).map((x) => T(x)).join(" · "))} · ${fmtDate(v.created_at)}</div>
+            ${v.message ? `<p class="review__msg">“${esc(v.message)}”</p>` : ""}
+          </article>`).join("")
+        : '<div class="empty">No volunteers yet.</div>';
+    }
+    $("[data-volunteer-list]").addEventListener("change", async (e) => {
+      const sel = e.target.closest('[data-field="status"]');
+      if (!sel) return;
+      const { error } = await sb.from("volunteers").update({ status: sel.value }).eq("id", sel.closest("[data-id]").dataset.id);
+      toast(error ? error.message : "Saved ✓");
+      loaders.volunteers();
+    });
+    $("[data-volunteer-export]").addEventListener("click", () => {
+      const cols = ["full_name", "phone", "profession", "skills", "availability", "location", "message", "status", "created_at"];
+      const cell = (v) => { let s = v == null ? "" : String(v); if (/^[=+\-@]/.test(s)) s = "'" + s; return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s; };
+      const csv = [cols.join(","), ...volunteersList.map((v) => cols.map((c) => cell(c === "phone" ? live.formatPhone(v.phone) : v[c])).join(","))].join("\n");
+      const a = document.createElement("a");
+      a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" }));
+      a.download = `ancharo-volunteers-${new Date().toISOString().slice(0, 10)}.csv`;
+      a.click();
     });
   });
 })();

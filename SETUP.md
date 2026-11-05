@@ -1,6 +1,6 @@
 # Turning on accounts, receipt uploads and the admin panel
 
-The website works on its own as a normal site. To let donors **create accounts and upload receipt screenshots**, and to give you an **admin panel** (approve donations, post announcements, add gallery photos, record spending), connect it to **Supabase**, a free online database with logins and file storage.
+The website works on its own as a normal site. To let people **create accounts with their phone number**, **upload receipt screenshots**, **vote**, **volunteer** and **adopt projects**, and to give you an **admin panel** for all of it, connect it to **Supabase**, a free online database with logins and file storage.
 
 It takes about 10 minutes, and you only do it once.
 
@@ -24,14 +24,17 @@ It takes about 10 minutes, and you only do it once.
 This creates the tables, the private storage for receipts, and the security rules
 (donors can only see their own receipts; only admins can approve donations or post content).
 
-## 3. Tell Supabase your website address
+## 3. Turn on simple phone sign-in
 
-Open **Authentication → URL Configuration**:
+People sign in with **phone number + password**, with no email and no SMS codes.
+For that, Supabase must not ask for email confirmation:
 
-- **Site URL:** `https://ancharo.vercel.app` (or your own domain later)
-- **Redirect URLs:** add `https://ancharo.vercel.app/**`
+1. Open **Authentication → Sign In / Providers** (on some accounts: **Authentication → Providers → Email**).
+2. Make sure **Email** is enabled, and turn **OFF** "**Confirm email**". Save.
+3. In **Authentication → URL Configuration**, set **Site URL** to `https://ancharo.vercel.app`.
 
-This makes the "confirm your email" and "reset password" links send people back to your site.
+> Behind the scenes, each phone number gets a private placeholder login address (`251911223344@phone.ancharo.app`).
+> Nobody sees it and no emails are ever sent to it.
 
 ## 4. Connect the website
 
@@ -53,24 +56,34 @@ This makes the "confirm your email" and "reset password" links send people back 
 
 ## 5. Make yourself the admin
 
-1. On your website, click **Sign in → Create account** and sign up with your email.
-2. Click the confirmation link in the email Supabase sends you.
-3. Back in Supabase **SQL Editor**, run this (with your email):
+1. On your website, click the round person icon at the top right → **Create account**, and sign up with your name, phone number and a password.
+2. In Supabase **SQL Editor**, run this with **your** phone number written in international form without `+` or spaces
+   (for example `09 11 22 33 44` becomes `251911223344`):
 
    ```sql
-   update public.profiles set role = 'admin'
-   where id = (select id from auth.users where email = 'you@example.com');
+   update public.profiles set role = 'admin' where phone = '251911223344';
    ```
 
-4. Refresh the website: an **Admin** link appears in the menu. From the **Users** tab of the admin panel you can make other people admins too.
+3. Refresh the website: your initials appear in a circle at the top right. Tap it and choose **Admin panel**.
+   From the **Users** tab you can make other people admins too.
+
+### Forgotten passwords
+
+There are no reset emails. If someone forgets their password, an admin opens **Admin → Users** and taps **Reset to 123456**.
+The person signs in with `123456` and the site immediately asks them to choose a new password.
 
 ## 6. Before you announce the site (recommended)
 
-- **Email sending:** Supabase's built-in email only sends a few emails per hour, which is fine for testing but not for launch day.
-  Set up free custom email in **Authentication → Emails → SMTP Settings** (e.g. with [Resend](https://resend.com) or [Brevo](https://www.brevo.com)).
 - **Starting numbers:** in **Admin → Settings**, set your goal, end date, and any money already collected before the website
   (cash, events…). The site's progress bar then shows real numbers. The sample numbers in `js/main.js` are only used while Supabase isn't connected.
 - **News:** your first announcement in **Admin → Announcements** automatically replaces the sample news on the site.
+- **Projects:** add real projects in **Admin → Projects**. They appear on the home page (replacing the sample "featured works")
+  and on the **Get involved** page, where people can adopt them.
+- **Amharic:** every form in the admin panel has an optional **🇪🇹 Amharic version**. Fill it in and Amharic visitors see that text.
+
+### If you already ran an older version of `schema.sql`
+
+Just run the new file again the same way (SQL Editor → paste everything → Run). It adds the new parts and keeps your data.
 
 ---
 
@@ -79,6 +92,9 @@ This makes the "confirm your email" and "reset password" links send people back 
 | What | Where it's stored | Who can see it |
 |------|-------------------|----------------|
 | Accounts, names, phone numbers | Supabase Auth + `profiles` table | The person themselves and admins |
+| Votes | `votes` table | Each person sees only their own vote; everyone sees the totals (`proposal_results`) |
+| Volunteers | `volunteers` table | The volunteer and admins; everyone sees counts per profession only |
+| Project pledges | `project_adoptions` table | The person and admins; confirmed adopter names are public if they chose so |
 | Donation submissions | `donations` table | The donor and admins |
 | Receipt screenshots | Private `receipts` storage | The donor and admins (temporary links only) |
 | Totals, supporters wall | `public_stats` / `public_supporters` functions | Everyone. A donor's name is shown **only** if they ticked "show my name" |

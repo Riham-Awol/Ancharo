@@ -306,35 +306,10 @@ begin
     order by p.created_at desc;
 end $$;
 
--- Admin only: donations together with the donor's name and email.
-create or replace function public.admin_list_donations(status_filter text default null)
-returns table (id bigint, user_id uuid, donor_name text, donor_email text, donor_phone text,
-               amount numeric, method text, reference text, donated_on date, screenshot_path text,
-               message text, show_name boolean, display_name text, status text, admin_note text,
-               reviewed_at timestamptz, created_at timestamptz)
-language plpgsql stable security definer set search_path = public as $$
-begin
-  if not public.is_admin() then
-    raise exception 'Admins only';
-  end if;
-  return query
-    select d.id, d.user_id, p.full_name, u.email::text, p.phone,
-           d.amount, d.method, d.reference, d.donated_on, d.screenshot_path,
-           d.message, d.show_name, d.display_name, d.status, d.admin_note,
-           d.reviewed_at, d.created_at
-    from public.donations d
-    left join public.profiles p on p.id = d.user_id
-    left join auth.users u on u.id = d.user_id
-    where status_filter is null or d.status = status_filter
-    order by d.created_at desc;
-end $$;
-
 revoke all on function public.admin_list_users() from anon;
-revoke all on function public.admin_list_donations(text) from anon;
 grant execute on function public.public_stats() to anon, authenticated;
 grant execute on function public.public_supporters(int) to anon, authenticated;
 grant execute on function public.admin_list_users() to authenticated;
-grant execute on function public.admin_list_donations(text) to authenticated;
 
 -- --------------------------------------------------------------------------
 -- 8. FILE STORAGE
@@ -379,9 +354,291 @@ drop policy if exists "media: admin delete" on storage.objects;
 create policy "media: admin delete" on storage.objects
   for delete to authenticated using (bucket_id = 'media' and public.is_admin());
 
+-- --------------------------------------------------------------------------
+-- 9. PHONE SIGN-IN SUPPORT
+--    People sign in with phone number + password. Admins can reset a forgotten
+--    password to 123456; the person must then choose a new one when they sign in.
+-- --------------------------------------------------------------------------
+alter table public.profiles add column if not exists must_change_password boolean not null default false;
+
+create or replace function public.admin_reset_password(target uuid)
+returns void language plpgsql security definer set search_path = public, extensions as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Admins only';
+  end if;
+  update auth.users set encrypted_password = crypt('123456', gen_salt('bf')), updated_at = now() where id = target;
+  update public.profiles set must_change_password = true where id = target;
+end $$;
+revoke all on function public.admin_reset_password(uuid) from anon;
+grant execute on function public.admin_reset_password(uuid) to authenticated;
+
+-- Amharic versions of announcements (optional; English is used when empty)
+alter table public.announcements add column if not exists title_am text check (char_length(title_am) <= 200);
+alter table public.announcements add column if not exists body_am text check (char_length(body_am) <= 20000);
+
+-- --------------------------------------------------------------------------
+-- 10. ADOPT A PROJECT
+-- --------------------------------------------------------------------------
+create table if not exists public.projects (
+  id              bigint generated always as identity primary key,
+  title           text not null check (char_length(title) between 1 and 200),
+  title_am        text check (char_length(title_am) <= 200),
+  description     text not null default '' check (char_length(description) <= 5000),
+  description_am  text check (char_length(description_am) <= 5000),
+  image_url       text check (char_length(image_url) <= 500),
+  goal            numeric(14, 2) not null check (goal > 0),
+  status          text not null default 'open' check (status in ('open', 'in_progress', 'completed')),
+  sort            int not null default 0,
+  created_by      uuid default auth.uid() references public.profiles (id) on delete set null,
+  created_at      timestamptz not null default now()
+);
+
+alter table public.projects enable row level security;
+drop policy if exists "projects: public read" on public.projects;
+create policy "projects: public read" on public.projects for select to anon, authenticated using (true);
+drop policy if exists "projects: admin insert" on public.projects;
+create policy "projects: admin insert" on public.projects for insert to authenticated with check (public.is_admin());
+drop policy if exists "projects: admin update" on public.projects;
+create policy "projects: admin update" on public.projects for update to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "projects: admin delete" on public.projects;
+create policy "projects: admin delete" on public.projects for delete to authenticated using (public.is_admin());
+
+-- A donation can be given to a specific project
+alter table public.donations add column if not exists project_id bigint references public.projects (id) on delete set null;
+
+create table if not exists public.project_adoptions (
+  id            bigint generated always as identity primary key,
+  project_id    bigint not null references public.projects (id) on delete cascade,
+  user_id       uuid default auth.uid() references public.profiles (id) on delete set null,
+  display_name  text not null check (char_length(display_name) between 1 and 100),
+  pledge        numeric(14, 2) not null check (pledge > 0 and pledge < 1000000000),
+  message       text check (char_length(message) <= 1000),
+  show_public   boolean not null default true,
+  status        text not null default 'pending' check (status in ('pending', 'confirmed', 'cancelled')),
+  created_at    timestamptz not null default now()
+);
+create index if not exists adoptions_project_idx on public.project_adoptions (project_id);
+
+alter table public.project_adoptions enable row level security;
+drop policy if exists "adoptions: read own or admin" on public.project_adoptions;
+create policy "adoptions: read own or admin" on public.project_adoptions
+  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+drop policy if exists "adoptions: pledge as self" on public.project_adoptions;
+create policy "adoptions: pledge as self" on public.project_adoptions
+  for insert to authenticated with check (user_id = auth.uid() and status = 'pending');
+drop policy if exists "adoptions: admin update" on public.project_adoptions;
+create policy "adoptions: admin update" on public.project_adoptions
+  for update to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "adoptions: delete own pending or admin" on public.project_adoptions;
+create policy "adoptions: delete own pending or admin" on public.project_adoptions
+  for delete to authenticated using ((user_id = auth.uid() and status = 'pending') or public.is_admin());
+
+-- Projects with money raised (approved donations), confirmed pledges and public adopter names
+create or replace function public.public_projects()
+returns table (id bigint, title text, title_am text, description text, description_am text, image_url text,
+               goal numeric, status text, raised numeric, pledged numeric, adopters text[])
+language sql stable security definer set search_path = public as $$
+  select p.id, p.title, p.title_am, p.description, p.description_am, p.image_url, p.goal, p.status,
+    coalesce((select sum(d.amount) from public.donations d where d.project_id = p.id and d.status = 'approved'), 0),
+    coalesce((select sum(a.pledge) from public.project_adoptions a where a.project_id = p.id and a.status = 'confirmed'), 0),
+    coalesce((select array_agg(a.display_name order by a.created_at) from public.project_adoptions a
+              where a.project_id = p.id and a.status = 'confirmed' and a.show_public), '{}')
+  from public.projects p
+  order by p.sort, p.created_at;
+$$;
+grant execute on function public.public_projects() to anon, authenticated;
+
+-- --------------------------------------------------------------------------
+-- 11. LET THE COMMUNITY DECIDE (votes)
+-- --------------------------------------------------------------------------
+create table if not exists public.proposals (
+  id              bigint generated always as identity primary key,
+  title           text not null check (char_length(title) between 1 and 200),
+  title_am        text check (char_length(title_am) <= 200),
+  description     text not null default '' check (char_length(description) <= 5000),
+  description_am  text check (char_length(description_am) <= 5000),
+  image_url       text check (char_length(image_url) <= 500),
+  options         text[] not null check (cardinality(options) between 2 and 10),
+  options_am      text[],
+  closes_at       timestamptz,
+  is_open         boolean not null default true,
+  created_by      uuid default auth.uid() references public.profiles (id) on delete set null,
+  created_at      timestamptz not null default now()
+);
+
+alter table public.proposals enable row level security;
+drop policy if exists "proposals: public read" on public.proposals;
+create policy "proposals: public read" on public.proposals for select to anon, authenticated using (true);
+drop policy if exists "proposals: admin insert" on public.proposals;
+create policy "proposals: admin insert" on public.proposals for insert to authenticated with check (public.is_admin());
+drop policy if exists "proposals: admin update" on public.proposals;
+create policy "proposals: admin update" on public.proposals for update to authenticated using (public.is_admin()) with check (public.is_admin());
+drop policy if exists "proposals: admin delete" on public.proposals;
+create policy "proposals: admin delete" on public.proposals for delete to authenticated using (public.is_admin());
+
+create table if not exists public.votes (
+  proposal_id  bigint not null references public.proposals (id) on delete cascade,
+  user_id      uuid not null default auth.uid() references public.profiles (id) on delete cascade,
+  choice       int not null check (choice >= 0),
+  created_at   timestamptz not null default now(),
+  primary key (proposal_id, user_id)
+);
+
+-- Is this a valid vote on a proposal that is still open?
+create or replace function public.can_vote(pid bigint, opt int)
+returns boolean language sql stable security definer set search_path = public as $$
+  select exists (
+    select 1 from public.proposals
+    where id = pid and is_open and (closes_at is null or closes_at > now()) and opt < cardinality(options)
+  );
+$$;
+
+alter table public.votes enable row level security;
+drop policy if exists "votes: read own or admin" on public.votes;
+create policy "votes: read own or admin" on public.votes
+  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+drop policy if exists "votes: vote as self" on public.votes;
+create policy "votes: vote as self" on public.votes
+  for insert to authenticated with check (user_id = auth.uid() and public.can_vote(proposal_id, choice));
+drop policy if exists "votes: change own vote" on public.votes;
+create policy "votes: change own vote" on public.votes
+  for update to authenticated
+  using (user_id = auth.uid())
+  with check (user_id = auth.uid() and public.can_vote(proposal_id, choice));
+drop policy if exists "votes: remove own vote" on public.votes;
+create policy "votes: remove own vote" on public.votes
+  for delete to authenticated using (user_id = auth.uid() and public.can_vote(proposal_id, 0));
+
+-- Vote counts only (never who voted for what)
+create or replace function public.proposal_results()
+returns table (proposal_id bigint, choice int, votes bigint)
+language sql stable security definer set search_path = public as $$
+  select v.proposal_id, v.choice, count(*) from public.votes v group by v.proposal_id, v.choice;
+$$;
+grant execute on function public.proposal_results() to anon, authenticated;
+
+-- --------------------------------------------------------------------------
+-- 12. VOLUNTEERS (help with your profession instead of money)
+-- --------------------------------------------------------------------------
+create table if not exists public.volunteers (
+  id            bigint generated always as identity primary key,
+  user_id       uuid unique default auth.uid() references public.profiles (id) on delete cascade,
+  profession    text not null check (char_length(profession) between 1 and 80),
+  skills        text check (char_length(skills) <= 500),
+  availability  text check (char_length(availability) <= 200),
+  location      text check (char_length(location) <= 120),
+  message       text check (char_length(message) <= 1000),
+  status        text not null default 'new' check (status in ('new', 'contacted', 'active')),
+  created_at    timestamptz not null default now(),
+  updated_at    timestamptz
+);
+
+-- Only admins change a volunteer's status.
+create or replace function public.protect_volunteer_status()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if new.status is distinct from old.status and auth.uid() is not null and not public.is_admin() then
+    raise exception 'Only admins can change the status';
+  end if;
+  new.updated_at := now();
+  return new;
+end $$;
+drop trigger if exists protect_volunteer_status on public.volunteers;
+create trigger protect_volunteer_status before update on public.volunteers
+  for each row execute function public.protect_volunteer_status();
+
+alter table public.volunteers enable row level security;
+drop policy if exists "volunteers: read own or admin" on public.volunteers;
+create policy "volunteers: read own or admin" on public.volunteers
+  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+drop policy if exists "volunteers: sign up self" on public.volunteers;
+create policy "volunteers: sign up self" on public.volunteers
+  for insert to authenticated with check (user_id = auth.uid() and status = 'new');
+drop policy if exists "volunteers: update own or admin" on public.volunteers;
+create policy "volunteers: update own or admin" on public.volunteers
+  for update to authenticated
+  using (user_id = auth.uid() or public.is_admin())
+  with check (user_id = auth.uid() or public.is_admin());
+drop policy if exists "volunteers: delete own or admin" on public.volunteers;
+create policy "volunteers: delete own or admin" on public.volunteers
+  for delete to authenticated using (user_id = auth.uid() or public.is_admin());
+
+-- Public: how many volunteers per profession (no names)
+create or replace function public.volunteer_stats()
+returns table (profession text, people bigint)
+language sql stable security definer set search_path = public as $$
+  select v.profession, count(*) from public.volunteers v group by v.profession order by count(*) desc, v.profession;
+$$;
+grant execute on function public.volunteer_stats() to anon, authenticated;
+
+-- --------------------------------------------------------------------------
+-- 13. ADMIN LISTS with names and phone numbers
+-- --------------------------------------------------------------------------
+create or replace function public.admin_list_volunteers()
+returns table (id bigint, user_id uuid, full_name text, phone text, profession text, skills text,
+               availability text, location text, message text, status text, created_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Admins only'; end if;
+  return query
+    select v.id, v.user_id, p.full_name, p.phone, v.profession, v.skills, v.availability, v.location,
+           v.message, v.status, v.created_at
+    from public.volunteers v left join public.profiles p on p.id = v.user_id
+    order by v.created_at desc;
+end $$;
+
+create or replace function public.admin_list_adoptions()
+returns table (id bigint, project_id bigint, project_title text, user_id uuid, full_name text, phone text,
+               display_name text, pledge numeric, message text, show_public boolean, status text, created_at timestamptz)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Admins only'; end if;
+  return query
+    select a.id, a.project_id, pr.title, a.user_id, p.full_name, p.phone, a.display_name, a.pledge,
+           a.message, a.show_public, a.status, a.created_at
+    from public.project_adoptions a
+    join public.projects pr on pr.id = a.project_id
+    left join public.profiles p on p.id = a.user_id
+    order by a.created_at desc;
+end $$;
+
+-- Donations list now also says which project a donation was for
+drop function if exists public.admin_list_donations(text);
+create or replace function public.admin_list_donations(status_filter text default null)
+returns table (id bigint, user_id uuid, donor_name text, donor_email text, donor_phone text,
+               amount numeric, method text, reference text, donated_on date, screenshot_path text,
+               message text, show_name boolean, display_name text, status text, admin_note text,
+               reviewed_at timestamptz, created_at timestamptz, project_id bigint, project_title text)
+language plpgsql stable security definer set search_path = public as $$
+begin
+  if not public.is_admin() then
+    raise exception 'Admins only';
+  end if;
+  return query
+    select d.id, d.user_id, p.full_name, u.email::text, p.phone,
+           d.amount, d.method, d.reference, d.donated_on, d.screenshot_path,
+           d.message, d.show_name, d.display_name, d.status, d.admin_note,
+           d.reviewed_at, d.created_at, d.project_id, pr.title
+    from public.donations d
+    left join public.profiles p on p.id = d.user_id
+    left join auth.users u on u.id = d.user_id
+    left join public.projects pr on pr.id = d.project_id
+    where status_filter is null or d.status = status_filter
+    order by d.created_at desc;
+end $$;
+
+revoke all on function public.admin_list_volunteers() from anon;
+revoke all on function public.admin_list_adoptions() from anon;
+revoke all on function public.admin_list_donations(text) from anon;
+grant execute on function public.admin_list_volunteers() to authenticated;
+grant execute on function public.admin_list_adoptions() to authenticated;
+grant execute on function public.admin_list_donations(text) to authenticated;
+
 -- ==========================================================================
 --  MAKE YOURSELF ADMIN (run once, after you have created your account on the website)
---  Replace the email address, then select just this line and press Run:
+--  Put your phone number in international form without "+" or spaces (09 11 22 33 44 → 251911223344),
+--  then select just this line and press Run:
 --
---  update public.profiles set role = 'admin' where id = (select id from auth.users where email = 'you@example.com');
+--  update public.profiles set role = 'admin' where phone = '251911223344';
 -- ==========================================================================

@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Get involved — Ancharo</title>
+  <meta name="description" content="Vote on community decisions, volunteer your skills, or adopt a project in Ancharo." />
+  <meta name="theme-color" content="#2f5d46" />
+  <!-- Link preview when shared on WhatsApp, Telegram, Facebook… -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Rebuild Ancharo" />
+  <meta property="og:title" content="Get involved — Ancharo" />
+  <meta property="og:description" content="Vote on community decisions, volunteer your skills, or adopt a project in Ancharo." />
+  <meta property="og:image" content="https://ancharo.vercel.app/images/og-image.jpg" />
+  <meta property="og:url" content="https://ancharo.vercel.app/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;600;700&family=Noto+Serif+Ethiopic:wght@600;700&display=swap" rel="stylesheet" />
+  <script src="js/i18n.js?v=f42a2118"></script>
+  <link rel="stylesheet" href="css/styles.css?v=7dc875d6" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="site-header">
+    <nav class="container nav" aria-label="Main">
+      <a class="brand" href="index.html">
+        <span class="brand__mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#faf6ef"/></svg></span>
+        <span class="brand__name">Ancharo</span>
+      </a>
+      <button class="nav__toggle" aria-label="Open menu" aria-expanded="false">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="news.html">News</a></li>
+        <li><a href="community.html" aria-current="page">Get involved</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a class="btn btn--gold" href="donate.html">Donate</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-hero" style="background-image:url('images/valley.svg')">
+      <div class="container">
+        <span class="eyebrow">Get involved</span>
+        <h1>Build Ancharo with us</h1>
+        <p>Money is only one way to help. Vote on what we build next, give your skills, or adopt a whole project with your family and friends.</p>
+      </div>
+    </section>
+
+    <section class="section ways-section">
+      <div class="container">
+        <div class="ways">
+          <a class="way reveal" href="#decide">
+            <span class="way__icon" aria-hidden="true">🗳️</span>
+            <h3>Let the community decide</h3>
+            <p>Vote on which projects come first and how the money is used.</p>
+            <span class="way__go">Vote now →</span>
+          </a>
+          <a class="way reveal" href="#volunteer">
+            <span class="way__icon" aria-hidden="true">🤝</span>
+            <h3>Volunteer your skills</h3>
+            <p>Engineer, teacher, nurse, builder? Help with your profession instead of money.</p>
+            <span class="way__go">Offer your skills →</span>
+          </a>
+          <a class="way reveal" href="#adopt">
+            <span class="way__icon" aria-hidden="true">♥</span>
+            <h3>Adopt a project</h3>
+            <p>Take one project and fund it, alone or together with others. Your name goes on it.</p>
+            <span class="way__go">See projects →</span>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ VOTE ============ -->
+    <section class="section" id="decide">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="eyebrow">Let the community decide</span>
+          <h2>Your voice, your city</h2>
+          <p class="lead">When there's a decision to make, everyone with an account gets one vote. You can change your vote until voting closes.</p>
+        </div>
+        <div class="proposals" data-proposals><p class="muted">Loading…</p></div>
+      </div>
+    </section>
+
+    <!-- ============ VOLUNTEER ============ -->
+    <section class="section section--sand" id="volunteer">
+      <div class="container split split--top">
+        <div class="reveal">
+          <span class="eyebrow">Volunteer without donating money</span>
+          <h2>Give your skills</h2>
+          <p class="lead">Engineers to check the road plans, teachers for the school, nurses for health days, builders, drivers, photographers… Every skill helps.</p>
+          <p>Tell us what you do and when you're free. Our team will call you when there's work that fits.</p>
+          <div class="vol-stats" data-volunteer-stats></div>
+        </div>
+        <div class="reveal">
+          <div class="panel" data-volunteer-signin hidden>
+            <h3>Sign in to volunteer</h3>
+            <p class="muted">It only takes your name and phone number.</p>
+            <a class="btn btn--green" href="account.html?next=community.html%23volunteer#signup">Create an account</a>
+            <a class="btn btn--ghost btn--small" href="account.html?next=community.html%23volunteer">I already have one</a>
+          </div>
+          <form class="panel form" data-form="volunteer" hidden>
+            <h3 data-volunteer-title>I want to volunteer</h3>
+            <p class="form-msg form-msg--ok" data-volunteer-status></p>
+            <label>My profession
+              <select name="profession" required>
+                <option value="">Choose…</option>
+                <option>Engineer</option>
+                <option>Builder / Mason</option>
+                <option>Carpenter</option>
+                <option>Electrician</option>
+                <option>Plumber</option>
+                <option>Teacher</option>
+                <option>Doctor / Nurse / Health worker</option>
+                <option>Accountant / Finance</option>
+                <option>Lawyer</option>
+                <option>IT / Computers</option>
+                <option>Driver / Transport</option>
+                <option>Farmer / Agriculture</option>
+                <option>Artist / Designer / Photographer</option>
+                <option>Student</option>
+                <option>Business owner</option>
+                <option value="__other">Other…</option>
+              </select>
+            </label>
+            <label data-other-profession hidden>Which profession?<input name="profession_other" maxlength="80" /></label>
+            <label>How can you help? <span class="opt">(skills, experience)</span><textarea name="skills" rows="3" maxlength="500" placeholder="e.g. Civil engineer, 8 years building roads"></textarea></label>
+            <div class="form-row">
+              <label>When are you free?
+                <select name="availability">
+                  <option>Weekends</option>
+                  <option>Evenings</option>
+                  <option>A few days a month</option>
+                  <option>Full time for a short period</option>
+                  <option>Online / from far away</option>
+                </select>
+              </label>
+              <label>Where do you live?
+                <select name="location">
+                  <option>In Ancharo</option>
+                  <option>Elsewhere in Ethiopia</option>
+                  <option>Abroad</option>
+                </select>
+              </label>
+            </div>
+            <label>Message <span class="opt">(optional)</span><textarea name="message" rows="2" maxlength="1000"></textarea></label>
+            <button class="btn btn--gold btn--block" type="submit" data-volunteer-submit>Sign me up as a volunteer</button>
+            <p class="form-msg" data-volunteer-msg role="status"></p>
+          </form>
+          <div class="panel" data-volunteer-offline hidden>
+            <h3>Want to volunteer?</h3>
+            <p>Send us your name, profession and phone number at <a href="mailto:info@example.com">info@example.com</a> and we'll get in touch.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============ ADOPT ============ -->
+    <section class="section" id="adopt">
+      <div class="container">
+        <div class="section__head reveal">
+          <span class="eyebrow">Adopt a project</span>
+          <h2>Make one project yours</h2>
+          <p class="lead">A family, a group of friends, a mosque or church community, or Ancharo people living abroad can adopt a project and fund it. Your name goes on the project.</p>
+        </div>
+        <ol class="steps steps--row reveal">
+          <li><strong>Choose a project</strong><span>Pick one below.</span></li>
+          <li><strong>Pledge</strong><span>Promise the whole amount or part of it.</span></li>
+          <li><strong>Send the money</strong><span>Upload your receipt and choose the project.</span></li>
+          <li><strong>See it built</strong><span>Your name is shown on the project.</span></li>
+        </ol>
+        <div class="grid grid--3 projects-grid" data-projects><p class="muted">Loading…</p></div>
+      </div>
+    </section>
+
+    <!-- adopt form -->
+    <div class="modal" data-adopt-modal hidden>
+      <div class="modal__box modal__box--form" role="dialog" aria-modal="true" aria-labelledby="adopt-title">
+        <button class="modal__close" type="button" aria-label="Close" data-modal-close>×</button>
+        <span class="eyebrow">Adopt a project</span>
+        <h2 id="adopt-title" data-adopt-title></h2>
+        <form class="form" data-form="adopt">
+          <input type="hidden" name="project_id" />
+          <label>Name to show on the project<input name="display_name" maxlength="100" required placeholder="e.g. The Mohammed family / Ancharo friends in Dubai" /></label>
+          <fieldset class="choice">
+            <legend>How much will you give?</legend>
+            <label class="check"><input type="radio" name="kind" value="full" checked /> <span>The whole remaining amount (<strong data-adopt-remaining></strong>)</span></label>
+            <label class="check"><input type="radio" name="kind" value="part" /> <span>Part of it</span></label>
+          </fieldset>
+          <label data-adopt-amount hidden>Amount (<span data-currency>ETB</span>)<input type="number" name="amount" min="1" step="any" /></label>
+          <label>Message <span class="opt">(optional)</span><textarea name="message" rows="2" maxlength="1000"></textarea></label>
+          <label class="check"><input type="checkbox" name="show_public" checked /> Show our name on the project</label>
+          <button class="btn btn--gold btn--block" type="submit">♥ Adopt this project</button>
+          <p class="form-msg" data-adopt-msg role="status"></p>
+        </form>
+        <div data-adopt-done hidden>
+          <p class="lead">Thank you! 🎉 Our team will confirm your pledge.</p>
+          <p>When you send money for this project, upload the receipt and choose this project in the list.</p>
+          <a class="btn btn--green" data-adopt-receipt href="account.html#submit">Upload a receipt →</a>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="index.html">
+            <span class="brand__mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#faf6ef"/></svg></span>
+            <span class="brand__name">Ancharo</span>
+          </a>
+          <p>A community effort to rebuild and renew our city, for the people who live here today and the generations to come.</p>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="news.html">News</a></li>
+            <li><a href="community.html">Get involved</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="donate.html">Donate</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:info@example.com">info@example.com</a></li>
+            <li><a href="tel:+251000000000">+251 00 000 0000</a></li>
+            <li>Ancharo, Ethiopia</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> Rebuild Ancharo. Made with love for our city.</span>
+        <a href="donate.html">Support the city →</a>
+      </div>
+    </div>
+  </footer>
+
+  <a class="fab-donate" href="donate.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.5-9.2C1 8.3 3.2 5 6.6 5c2 0 3.5 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.6 3.3 4.1 6.8C19.5 16.4 12 21 12 21Z"/></svg>Donate</a>
+
+  <script src="js/config.js?v=8a167446"></script>
+  <script src="js/main.js?v=caca4e38"></script>
+  <script src="js/live.js?v=09cb21bb"></script>
+  <script src="js/community.js?v=582b84c4"></script>
+</body>
+</html>

@@ -13,8 +13,9 @@ You can also just open `index.html` in a browser to preview it.
 | `news.html`    | News and updates, each with an expandable full story |
 | `about.html`   | The city's story, how the campaign works, goals |
 | `donate.html`  | Bank accounts with copy buttons, mobile money, international transfer, how to give, where the money went |
-| `account.html` | Donors sign in, upload receipt screenshots, follow their status, download a thank-you certificate |
-| `admin.html`   | Admin panel: approve donations, post announcements, gallery, spending, settings, users |
+| `community.html` | Get involved: community votes, volunteering with your profession, adopt a project |
+| `account.html` | Sign in with phone number, upload receipt screenshots, follow their status, thank-you certificate, change password |
+| `admin.html`   | Admin panel: donations, projects & pledges, votes, volunteers, announcements, gallery, spending, settings, users |
 
 ## Features
 
@@ -26,21 +27,41 @@ You can also just open `index.html` in a browser to preview it.
 - **Link previews**: a picture and title appear when the link is shared in chats and social media
 - **Campaign timeline** on the About page
 - **Floating Donate button** on phones, a friendly **404 page**, and a hero banner that always fits the screen (also at 125% / 150% display scaling)
+- **Menu bar over the hero**: clear at the top of the page, frosted and slightly see-through once you scroll
+
+## English and Amharic
+
+Every page works in **English and Amharic (አማርኛ)**. The **EN / አማ** button in the menu switches language, and the choice is remembered.
+Phones set to Amharic open the site in Amharic automatically.
+
+- All Amharic text is in **`js/i18n-am.js`**: English on the left, Amharic on the right. To improve a translation, edit the right side.
+- Please have a native speaker read it before launch.
+- Content added in the admin panel (news, projects, votes) can have its own Amharic version in each form.
 
 ## Accounts, receipts and the admin panel
 
 These need a free **Supabase** project. Follow **[SETUP.md](SETUP.md)** (about 10 minutes). Until then, the site works as a normal static website.
 
 Once connected:
-- **Donors** create an account, upload a screenshot of their transfer receipt, and see it go from *Waiting for review* to *Approved*.
+- People **sign in with their phone number and a password** (just name + phone + password to create an account).
+  Their initials appear in a circle at the right end of the menu. A forgotten password is reset by an admin to `123456`,
+  and the person must choose a new one when they sign in.
+- **Donors** upload a screenshot of their transfer receipt (optionally for a specific project) and see it go from *Waiting for review* to *Approved*.
   Approved donors can download a **thank-you certificate** to share.
+- **Let the community decide:** admins ask a question with choices; everyone with an account votes once (and can change their vote until it closes).
+  Results appear after voting, and only totals are public.
+- **Volunteer without money:** people offer their profession, skills and free time. Admins see the list with phone numbers;
+  the public sees how many people of each profession signed up.
+- **Adopt a project:** a family, group or diaspora community pledges to fund a whole project or part of it.
+  Once an admin confirms, their name shows on the project.
 - **Admins** get a panel to:
   - review each receipt, correct the amount, approve or reject it with a note, and export everything to CSV
   - post **announcements** (with photo; *pin* one to show it as a banner on every page)
   - upload **gallery** photos (they're shrunk automatically for fast loading)
   - record **spending**, shown publicly on the donate page under "Where the money went"
   - set the **goal, end date, and money collected offline**
-  - make other people admins
+  - add **projects**, confirm **pledges**, start **votes**, follow up with **volunteers**
+  - make other people admins, and reset forgotten passwords
 - The **progress bar** and **supporters wall** update automatically from approved donations.
   Donors are shown as "Anonymous" unless they tick *Show my name*.
 

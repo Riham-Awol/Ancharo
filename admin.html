@@ -18,8 +18,9 @@
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=e0e4232d" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;600;700&family=Noto+Serif+Ethiopic:wght@600;700&display=swap" rel="stylesheet" />
+  <script src="js/i18n.js?v=f42a2118"></script>
+  <link rel="stylesheet" href="css/styles.css?v=7dc875d6" />
 </head>
 <body>
 
@@ -37,6 +38,7 @@
         <li><a href="index.html">Home</a></li>
         <li><a href="gallery.html">Gallery</a></li>
         <li><a href="news.html">News</a></li>
+        <li><a href="community.html">Get involved</a></li>
         <li><a href="about.html">About</a></li>
         <li><a class="btn btn--gold" href="donate.html">Donate</a></li>
       </ul>
@@ -71,6 +73,9 @@
           <nav class="admin-tabs" role="tablist" aria-label="Admin sections">
             <button class="admin-tab is-active" type="button" data-tab="overview">Overview</button>
             <button class="admin-tab" type="button" data-tab="donations">Donations <span class="badge" data-pending-badge hidden></span></button>
+            <button class="admin-tab" type="button" data-tab="projects">Projects <span class="badge" data-pledge-badge hidden></span></button>
+            <button class="admin-tab" type="button" data-tab="votes">Votes</button>
+            <button class="admin-tab" type="button" data-tab="volunteers">Volunteers <span class="badge" data-volunteer-badge hidden></span></button>
             <button class="admin-tab" type="button" data-tab="news">Announcements</button>
             <button class="admin-tab" type="button" data-tab="gallery">Gallery</button>
             <button class="admin-tab" type="button" data-tab="spending">Spending</button>
@@ -102,6 +107,81 @@
             <div class="review-list" data-donation-list><p class="muted">Loading…</p></div>
           </div>
 
+          <!-- PROJECTS (adopt a project) -->
+          <div class="admin-pane" data-pane="projects" hidden>
+            <div class="admin-split">
+              <form class="panel form" data-form="project">
+                <h2 data-project-heading>New project</h2>
+                <input type="hidden" name="id" />
+                <label>Title<input name="title" maxlength="200" required placeholder="e.g. Solar street lights for the market road" /></label>
+                <label>Description<textarea name="description" rows="4" maxlength="5000"></textarea></label>
+                <div class="form-row">
+                  <label>Cost (<span data-currency>ETB</span>)<input type="number" name="goal" min="1" step="any" required /></label>
+                  <label>Status
+                    <select name="status"><option value="open">Needs funding</option><option value="in_progress">In progress</option><option value="completed">Completed</option></select>
+                  </label>
+                </div>
+                <label>Photo <span class="opt">(optional)</span><input type="file" name="image" accept="image/*" /></label>
+                <details class="am-fields"><summary>🇪🇹 Amharic version <span class="opt">(optional)</span></summary>
+                  <label>Title in Amharic<input name="title_am" maxlength="200" lang="am" /></label>
+                  <label>Description in Amharic<textarea name="description_am" rows="4" maxlength="5000" lang="am"></textarea></label>
+                </details>
+                <label>Order <span class="opt">(lower numbers are shown first)</span><input type="number" name="sort" value="0" step="1" /></label>
+                <div class="form-actions">
+                  <button class="btn btn--green" type="submit">Save project</button>
+                  <button class="btn btn--ghost btn--small" type="button" data-project-cancel hidden>Cancel editing</button>
+                </div>
+                <p class="form-msg" data-project-msg role="status"></p>
+              </form>
+              <div>
+                <div class="panel">
+                  <h2>Pledges <span class="opt">(people adopting projects)</span></h2>
+                  <div class="admin-list" data-pledge-list><p class="muted">Loading…</p></div>
+                </div>
+                <div class="panel">
+                  <h2>Projects</h2>
+                  <div class="admin-list" data-project-list><p class="muted">Loading…</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VOTES (let the community decide) -->
+          <div class="admin-pane" data-pane="votes" hidden>
+            <div class="admin-split">
+              <form class="panel form" data-form="proposal">
+                <h2>Ask the community</h2>
+                <label>Question<input name="title" maxlength="200" required placeholder="e.g. Which project should we start next?" /></label>
+                <label>Explanation <span class="opt">(optional)</span><textarea name="description" rows="3" maxlength="5000"></textarea></label>
+                <label>Choices <span class="opt">(one per line, 2 to 10)</span><textarea name="options" rows="4" required placeholder="Clean water points&#10;Solar street lights&#10;School library"></textarea></label>
+                <details class="am-fields"><summary>🇪🇹 Amharic version <span class="opt">(optional)</span></summary>
+                  <label>Question in Amharic<input name="title_am" maxlength="200" lang="am" /></label>
+                  <label>Explanation in Amharic<textarea name="description_am" rows="3" maxlength="5000" lang="am"></textarea></label>
+                  <label>Choices in Amharic <span class="opt">(same order, one per line)</span><textarea name="options_am" rows="4" lang="am"></textarea></label>
+                </details>
+                <div class="form-row">
+                  <label>Voting closes <span class="opt">(optional)</span><input type="date" name="closes_at" /></label>
+                  <label>Photo <span class="opt">(optional)</span><input type="file" name="image" accept="image/*" /></label>
+                </div>
+                <button class="btn btn--green" type="submit">Start the vote</button>
+                <p class="form-msg" data-proposal-msg role="status"></p>
+              </form>
+              <div class="panel">
+                <h2>Votes &amp; results</h2>
+                <div class="admin-list" data-proposal-list><p class="muted">Loading…</p></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- VOLUNTEERS -->
+          <div class="admin-pane" data-pane="volunteers" hidden>
+            <div class="toolbar">
+              <input class="search" type="search" placeholder="Search profession, name, phone…" data-volunteer-search />
+              <button class="btn btn--ghost btn--small" type="button" data-volunteer-export>Download CSV</button>
+            </div>
+            <div class="vol-list" data-volunteer-list><p class="muted">Loading…</p></div>
+          </div>
+
           <!-- ANNOUNCEMENTS -->
           <div class="admin-pane" data-pane="news" hidden>
             <div class="admin-split">
@@ -114,6 +194,10 @@
                   <datalist id="tags"><option>News</option><option>Projects</option><option>Community</option><option>Campaign</option><option>Event</option><option>Urgent</option></datalist>
                 </label>
                 <label>Text <span class="opt">(leave an empty line between paragraphs; links work)</span><textarea name="body" rows="8" maxlength="20000"></textarea></label>
+                <details class="am-fields"><summary>🇪🇹 Amharic version <span class="opt">(optional)</span></summary>
+                  <label>Title in Amharic<input name="title_am" maxlength="200" lang="am" /></label>
+                  <label>Text in Amharic<textarea name="body_am" rows="6" maxlength="20000" lang="am"></textarea></label>
+                </details>
                 <label>Photo <span class="opt">(optional)</span><input type="file" name="image" accept="image/*" /></label>
                 <div class="current-img" data-current-img hidden><img alt="" /><label class="check"><input type="checkbox" name="remove_image" /> Remove photo</label></div>
                 <label class="check"><input type="checkbox" name="pinned" /> 📌 Pin it: show as a banner at the top of every page</label>
@@ -198,7 +282,7 @@
             <div class="toolbar"><input class="search" type="search" placeholder="Search users…" data-user-search /></div>
             <div class="panel table-wrap">
               <table class="table">
-                <thead><tr><th>Name</th><th>Email</th><th>Phone</th><th>Joined</th><th class="num">Confirmed</th><th>Role</th></tr></thead>
+                <thead><tr><th>Name</th><th>Phone</th><th>Joined</th><th class="num">Confirmed</th><th>Role</th><th>Password</th></tr></thead>
                 <tbody data-user-rows><tr><td colspan="6" class="muted">Loading…</td></tr></tbody>
               </table>
             </div>
@@ -233,6 +317,7 @@
             <li><a href="index.html">Home</a></li>
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="news.html">News</a></li>
+            <li><a href="community.html">Get involved</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="donate.html">Donate</a></li>
           </ul>
@@ -254,8 +339,8 @@
   </footer>
 
   <script src="js/config.js?v=8a167446"></script>
-  <script src="js/main.js?v=cd7a67a6"></script>
-  <script src="js/live.js?v=f48872e1"></script>
-  <script src="js/admin.js?v=624bfc3e"></script>
+  <script src="js/main.js?v=caca4e38"></script>
+  <script src="js/live.js?v=09cb21bb"></script>
+  <script src="js/admin.js?v=255b8632"></script>
 </body>
 </html>

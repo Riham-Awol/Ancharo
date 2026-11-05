@@ -42,10 +42,20 @@ function esc(s) {
 /* ---------- Mobile menu ---------- */
 const toggle = document.querySelector(".nav__toggle");
 const links = document.querySelector(".nav__links");
+/* ---------- Header: clear over the big picture, frosted once you scroll ---------- */
+const header = document.querySelector(".site-header");
+const firstSection = document.querySelector("main > :first-child");
+if (firstSection && firstSection.matches(".hero, .page-hero, .admin-top")) document.body.classList.add("has-overlay");
+const updateHeader = () =>
+  header && header.classList.toggle("is-scrolled", window.scrollY > 24 || (links && links.classList.contains("is-open")));
+window.addEventListener("scroll", updateHeader, { passive: true });
+updateHeader();
+
 if (toggle && links) {
   toggle.addEventListener("click", () => {
     const open = links.classList.toggle("is-open");
     toggle.setAttribute("aria-expanded", open);
+    updateHeader();
   });
 }
 

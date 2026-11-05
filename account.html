@@ -18,8 +18,9 @@
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css?v=e0e4232d" />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;600;700&family=Noto+Serif+Ethiopic:wght@600;700&display=swap" rel="stylesheet" />
+  <script src="js/i18n.js?v=f42a2118"></script>
+  <link rel="stylesheet" href="css/styles.css?v=7dc875d6" />
 </head>
 <body>
 
@@ -37,6 +38,7 @@
         <li><a href="index.html">Home</a></li>
         <li><a href="gallery.html">Gallery</a></li>
         <li><a href="news.html">News</a></li>
+        <li><a href="community.html">Get involved</a></li>
         <li><a href="about.html">About</a></li>
         <li><a class="btn btn--gold" href="donate.html">Donate</a></li>
       </ul>
@@ -47,8 +49,8 @@
     <section class="page-hero page-hero--slim" style="background-image:url('images/hero.jpg')">
       <div class="container">
         <span class="eyebrow">My account</span>
-        <h1 data-account-title>Your donations</h1>
-        <p>Sent a donation? Upload your receipt screenshot here. Our team checks it and adds it to the total.</p>
+        <h1 data-account-title>Your account</h1>
+        <p>Sign in with your phone number to upload donation receipts, vote on community decisions, volunteer and adopt projects.</p>
       </div>
     </section>
 
@@ -58,7 +60,7 @@
         <!-- Shown until Supabase is connected (js/config.js) -->
         <div data-view="setup" class="panel panel--narrow" hidden>
           <h2>Accounts are coming soon</h2>
-          <p>Online receipt uploads aren't switched on yet. In the meantime, please send a screenshot of your receipt to <a href="mailto:info@example.com">info@example.com</a>.</p>
+          <p>Online accounts aren't switched on yet. In the meantime, please send a screenshot of your receipt to <a href="mailto:info@example.com">info@example.com</a>.</p>
           <a class="btn btn--green" href="donate.html">Back to donate</a>
         </div>
 
@@ -73,31 +75,18 @@
             </div>
 
             <form class="form" data-form="signin">
-              <label>Email<input type="email" name="email" autocomplete="email" required /></label>
-              <label>Password<input type="password" name="password" autocomplete="current-password" required /></label>
+              <label>Phone number<input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="09 11 22 33 44" required /></label>
+              <label>Password<span class="pw"><input type="password" name="password" autocomplete="current-password" required /><button type="button" class="pw__toggle" data-pw-toggle aria-label="Show password">👁</button></span></label>
               <button class="btn btn--green btn--block" type="submit">Sign in</button>
-              <button class="link-btn" type="button" data-auth-tab="forgot">Forgot your password?</button>
+              <p class="hint">Forgot your password? Ask a campaign admin to reset it. Then sign in with <strong>123456</strong> and choose a new one.</p>
             </form>
 
             <form class="form" data-form="signup" hidden>
-              <label>Full name<input type="text" name="full_name" autocomplete="name" maxlength="120" required /></label>
-              <label>Phone <span class="opt">(optional)</span><input type="tel" name="phone" autocomplete="tel" maxlength="40" /></label>
-              <label>Email<input type="email" name="email" autocomplete="email" required /></label>
-              <label>Password <span class="opt">(at least 8 characters)</span><input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
+              <label>Your name<input type="text" name="full_name" autocomplete="name" maxlength="120" placeholder="e.g. Sara Mohammed" required /></label>
+              <label>Phone number<input type="tel" name="phone" autocomplete="tel" inputmode="tel" placeholder="09 11 22 33 44" required /></label>
+              <label>Choose a password <span class="opt">(at least 6 characters or numbers)</span><span class="pw"><input type="password" name="password" autocomplete="new-password" minlength="6" required /><button type="button" class="pw__toggle" data-pw-toggle aria-label="Show password">👁</button></span></label>
               <button class="btn btn--green btn--block" type="submit">Create account</button>
-            </form>
-
-            <form class="form" data-form="forgot" hidden>
-              <p>Enter your email and we'll send you a link to choose a new password.</p>
-              <label>Email<input type="email" name="email" autocomplete="email" required /></label>
-              <button class="btn btn--green btn--block" type="submit">Send reset link</button>
-              <button class="link-btn" type="button" data-auth-tab="signin">← Back to sign in</button>
-            </form>
-
-            <form class="form" data-form="reset" hidden>
-              <p>Choose a new password for your account.</p>
-              <label>New password<input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
-              <button class="btn btn--green btn--block" type="submit">Save new password</button>
+              <p class="hint">Living abroad? Write your number with the country code, e.g. +1 202 555 0100.</p>
             </form>
 
             <p class="form-msg" data-auth-msg role="status"></p>
@@ -108,10 +97,22 @@
               <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Upload your receipt screenshot in seconds</span></li>
               <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>See when your donation is confirmed</span></li>
               <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Get a thank-you certificate to share</span></li>
-              <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Choose whether your name appears on the supporters wall</span></li>
+              <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Vote on community decisions, volunteer, or adopt a project</span></li>
             </ul>
-            <p class="muted">Your receipts are private: only you and the campaign admins can see them.</p>
+            <p class="muted">Only your name and phone number are needed. Your receipts are private: only you and the campaign admins can see them.</p>
           </div>
+        </div>
+
+        <!-- ============ CHOOSE A NEW PASSWORD (after a reset to 123456) ============ -->
+        <div data-view="password" class="panel panel--narrow" hidden>
+          <h2>Choose your own password</h2>
+          <p class="muted">You signed in with the temporary password. Please choose a new one that only you know.</p>
+          <form class="form" data-form="newpass">
+            <label>New password <span class="opt">(at least 6 characters or numbers)</span><span class="pw"><input type="password" name="password" autocomplete="new-password" minlength="6" required /><button type="button" class="pw__toggle" data-pw-toggle aria-label="Show password">👁</button></span></label>
+            <label>Type it again<input type="password" name="password2" autocomplete="new-password" minlength="6" required /></label>
+            <button class="btn btn--green btn--block" type="submit">Save my password</button>
+            <p class="form-msg" data-newpass-msg role="status"></p>
+          </form>
         </div>
 
         <!-- ============ DASHBOARD ============ -->
@@ -119,7 +120,7 @@
           <div class="dash-head">
             <div>
               <h2>Hello, <span data-user-name></span> 👋</h2>
-              <p class="muted" data-user-email></p>
+              <p class="muted" data-user-phone></p>
             </div>
             <div class="dash-head__actions">
               <a class="btn btn--ghost btn--small" href="admin.html" data-admin-only hidden>Admin panel</a>
@@ -146,6 +147,9 @@
                     <option>International transfer</option>
                     <option>Other</option>
                   </select>
+                </label>
+                <label>For which project?
+                  <select name="project_id" data-project-select><option value="">General fund (where it's needed most)</option></select>
                 </label>
                 <label>Transaction reference <span class="opt">(optional)</span><input type="text" name="reference" maxlength="120" placeholder="e.g. FT26309XYZ" /></label>
 
@@ -178,11 +182,28 @@
                 <div class="my-list" data-my-donations><p class="muted">Loading…</p></div>
               </div>
 
+              <div class="panel" data-activity hidden>
+                <h2>My community activity</h2>
+                <div data-my-pledges></div>
+                <div data-my-volunteer></div>
+                <a class="btn btn--ghost btn--small" href="community.html">Get involved →</a>
+              </div>
+
+              <details class="panel panel--details" id="password">
+                <summary>Change my password</summary>
+                <form class="form" data-form="changepass">
+                  <label>New password <span class="opt">(at least 6 characters or numbers)</span><input type="password" name="password" autocomplete="new-password" minlength="6" required /></label>
+                  <label>Type it again<input type="password" name="password2" autocomplete="new-password" minlength="6" required /></label>
+                  <button class="btn btn--green" type="submit">Change password</button>
+                  <p class="form-msg" data-changepass-msg role="status"></p>
+                </form>
+              </details>
+
               <details class="panel panel--details">
-                <summary>Edit my details</summary>
+                <summary>Edit my name</summary>
                 <form class="form" data-form="profile">
                   <label>Full name<input type="text" name="full_name" maxlength="120" required /></label>
-                  <label>Phone <span class="opt">(optional)</span><input type="tel" name="phone" maxlength="40" /></label>
+                  <label>Phone number <span class="opt">(used to sign in; ask an admin to change it)</span><input type="tel" name="phone" readonly /></label>
                   <button class="btn btn--green" type="submit">Save</button>
                   <p class="form-msg" data-profile-msg role="status"></p>
                 </form>
@@ -211,6 +232,7 @@
             <li><a href="index.html">Home</a></li>
             <li><a href="gallery.html">Gallery</a></li>
             <li><a href="news.html">News</a></li>
+            <li><a href="community.html">Get involved</a></li>
             <li><a href="about.html">About</a></li>
             <li><a href="donate.html">Donate</a></li>
           </ul>
@@ -232,8 +254,8 @@
   </footer>
 
   <script src="js/config.js?v=8a167446"></script>
-  <script src="js/main.js?v=cd7a67a6"></script>
-  <script src="js/live.js?v=f48872e1"></script>
-  <script src="js/account.js?v=a1eefd40"></script>
+  <script src="js/main.js?v=caca4e38"></script>
+  <script src="js/live.js?v=09cb21bb"></script>
+  <script src="js/account.js?v=84838dd4"></script>
 </body>
 </html>
