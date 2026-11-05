@@ -635,10 +635,54 @@ grant execute on function public.admin_list_volunteers() to authenticated;
 grant execute on function public.admin_list_adoptions() to authenticated;
 grant execute on function public.admin_list_donations(text) to authenticated;
 
+-- --------------------------------------------------------------------------
+-- 14. REPAIRS + MAKE ADMIN
+-- --------------------------------------------------------------------------
+-- Accounts created before this file was run have no profile yet: create them now.
+insert into public.profiles (id, full_name, phone)
+select u.id,
+       left(coalesce(u.raw_user_meta_data ->> 'full_name', ''), 120),
+       left(coalesce(u.raw_user_meta_data ->> 'phone', nullif(split_part(u.email, '@phone.ancharo.app', 1), u.email)), 40)
+from auth.users u
+left join public.profiles p on p.id = u.id
+where p.id is null;
+
+-- People may create their own missing profile (never as admin).
+drop policy if exists "profiles: create own" on public.profiles;
+create policy "profiles: create own" on public.profiles
+  for insert to authenticated with check (id = auth.uid() and role = 'user' and not must_change_password);
+
+-- select make_admin('0911 22 33 44');  → makes that account an admin.
+-- Accepts any way of writing the number. Only works in the SQL Editor (or for existing admins).
+create or replace function public.make_admin(phone_number text)
+returns text language plpgsql security definer set search_path = public as $$
+declare
+  d text := regexp_replace(coalesce(phone_number, ''), '\D', '', 'g');
+  uid uuid;
+begin
+  if auth.uid() is not null and not public.is_admin() then
+    raise exception 'Admins only';
+  end if;
+  if phone_number ~ '^\s*00' then d := substr(d, 3);
+  elsif phone_number !~ '^\s*\+' and length(d) = 10 and left(d, 1) = '0' then d := '251' || substr(d, 2);
+  elsif phone_number !~ '^\s*\+' and d ~ '^[79][0-9]{8}$' then d := '251' || d;
+  end if;
+  select id into uid from auth.users where email = d || '@phone.ancharo.app';
+  if uid is null then
+    return 'No account found for +' || d || '. First create the account on the website (Create account), then run this again.';
+  end if;
+  insert into public.profiles (id, full_name, phone)
+  select u.id, left(coalesce(u.raw_user_meta_data ->> 'full_name', ''), 120), d from auth.users u where u.id = uid
+  on conflict (id) do nothing;
+  update public.profiles set role = 'admin', phone = coalesce(nullif(phone, ''), d) where id = uid;
+  update auth.users set email_confirmed_at = coalesce(email_confirmed_at, now()) where id = uid;
+  return 'Done: +' || d || ' is now an admin. Refresh the website.';
+end $$;
+revoke all on function public.make_admin(text) from public, anon, authenticated;
+
 -- ==========================================================================
---  MAKE YOURSELF ADMIN (run once, after you have created your account on the website)
---  Put your phone number in international form without "+" or spaces (09 11 22 33 44 → 251911223344),
---  then select just this line and press Run:
+--  MAKE YOURSELF ADMIN (after creating your account on the website)
+--  Put your phone number in, select just this line and press Run:
 --
---  update public.profiles set role = 'admin' where phone = '251911223344';
+--  select make_admin('0911 22 33 44');
 -- ==========================================================================

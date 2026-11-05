@@ -36,7 +36,7 @@
         $("[data-denied-msg]").textContent = "Please sign in with an admin account.";
         return;
       }
-      const { data } = await sb.from("profiles").select("id,full_name,phone,role").eq("id", session.user.id).maybeSingle();
+      const data = await live.getProfile(sb, session.user);
       if (!data || data.role !== "admin") {
         show("denied");
         $("[data-denied-msg]").textContent = "Your account doesn't have admin access. Ask an existing admin to give you the admin role.";

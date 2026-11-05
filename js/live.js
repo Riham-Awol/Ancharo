@@ -113,6 +113,26 @@
   live.initials = (name) =>
     String(name || "").trim().split(/\s+/).filter(Boolean).slice(0, 2).map((w) => [...w][0]).join("").toUpperCase() || "?";
 
+  // Load the signed-in person's profile; create it if it's missing
+  // (accounts made before the database was fully set up).
+  const inflight = {};
+  live.getProfile = (sb, user) => {
+    if (inflight[user.id]) return inflight[user.id];
+    const cols = "id,full_name,phone,role,must_change_password";
+    const load = async () => {
+      const { data } = await sb.from("profiles").select(cols).eq("id", user.id).maybeSingle();
+      if (data) return data;
+      const meta = user.user_metadata || {};
+      const fromEmail = /^(\d+)@phone\.ancharo\.app$/.exec(user.email || "");
+      const row = { id: user.id, full_name: String(meta.full_name || "").slice(0, 120), phone: meta.phone || (fromEmail && fromEmail[1]) || null };
+      await sb.from("profiles").insert(row);
+      const again = await sb.from("profiles").select(cols).eq("id", user.id).maybeSingle();
+      return again.data || { ...row, role: "user", must_change_password: false };
+    };
+    inflight[user.id] = load().finally(() => setTimeout(() => delete inflight[user.id], 1000));
+    return inflight[user.id];
+  };
+
   /* ---------- account circle at the right end of the menu ---------- */
   const ICON_USER = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 3.6-7 8-7s8 3 8 7"/></svg>';
   async function nav(sb) {
@@ -128,8 +148,7 @@
         box.innerHTML = `<a class="avatar avatar--guest" href="${pageHref("account")}" title="Sign in" aria-label="Sign in" data-signin-link>${ICON_USER}</a>`;
         return;
       }
-      const { data } = await sb.from("profiles").select("full_name,phone,role,must_change_password").eq("id", session.user.id).maybeSingle();
-      const p = (live.profile = data || { full_name: "", phone: "", role: "user" });
+      const p = (live.profile = await live.getProfile(sb, session.user));
       box.innerHTML = `
         <button class="avatar" type="button" aria-haspopup="true" aria-expanded="false" aria-label="My account" data-avatar>${esc(live.initials(p.full_name))}</button>
         <div class="user-menu" hidden>

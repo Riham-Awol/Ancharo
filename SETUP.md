@@ -65,12 +65,14 @@ For that, Supabase must not ask for email confirmation:
 ## 5. Make yourself the admin
 
 1. On your website, click the round person icon at the top right → **Create account**, and sign up with your name, phone number and a password.
-2. In Supabase **SQL Editor**, run this with **your** phone number written in international form without `+` or spaces
-   (for example `09 11 22 33 44` becomes `251911223344`):
+2. In Supabase **SQL Editor**, run this with **your** phone number (any way of writing it works):
 
    ```sql
-   update public.profiles set role = 'admin' where phone = '251911223344';
+   select make_admin('0911 22 33 44');
    ```
+
+   It answers *"Done: +251911223344 is now an admin"*. If it says *"No account found"*, the account wasn't created yet: do step 1 first.
+   (It also repairs accounts that were created before `schema.sql` was run.)
 
 3. Refresh the website: your initials appear in a circle at the top right. Tap it and choose **Admin panel**.
    From the **Users** tab you can make other people admins too.

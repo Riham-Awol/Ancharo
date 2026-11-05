@@ -109,8 +109,7 @@
     let projects = [];
     async function enter(u) {
       user = u;
-      const { data } = await sb.from("profiles").select("full_name,phone,role,must_change_password").eq("id", u.id).maybeSingle();
-      profile = data || { full_name: "", phone: "", role: "user" };
+      profile = await live.getProfile(sb, u);
       if (profile.must_change_password) {
         show("password");
         return;
