@@ -11,13 +11,14 @@
   <meta property="og:site_name" content="Rebuild Ancharo" />
   <meta property="og:title" content="News — Ancharo" />
   <meta property="og:description" content="Latest news and updates from the Rebuild Ancharo campaign." />
-  <meta property="og:image" content="/images/og-image.jpg" />
+  <meta property="og:image" content="https://ancharo.vercel.app/images/og-image.jpg" />
+  <meta property="og:url" content="https://ancharo.vercel.app/" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=e0e4232d" />
 </head>
 <body>
 
@@ -53,11 +54,12 @@
     <section class="section">
       <div class="container">
         <!--
-          To add a news post: copy one <article class="news-item"> block and put it at the TOP.
-          Change the id, image, tag, date, title, summary and the full story inside <details>.
+          These are SAMPLE posts. Once Supabase is connected, post news from the Admin panel:
+          the first real announcement automatically hides every post marked data-sample.
+          (Without Supabase: copy one <article class="news-item"> block to the top and edit it.)
         -->
-        <div class="news-list">
-          <article class="news-item reveal" id="launch">
+        <div class="news-list" data-news-list>
+          <article class="news-item reveal" data-sample id="launch">
             <img src="images/hero.svg" alt="Ancharo at sunset" loading="lazy" />
             <div class="news-item__body">
               <div class="card__meta"><span class="tag">Campaign</span><time datetime="2026-11-01">1 November 2026</time></div>
@@ -71,7 +73,7 @@
             </div>
           </article>
 
-          <article class="news-item reveal" id="road">
+          <article class="news-item reveal" data-sample id="road">
             <img src="images/roadwork.svg" alt="Road repair crew at work" loading="lazy" />
             <div class="news-item__body">
               <div class="card__meta"><span class="tag">Projects</span><time datetime="2026-10-20">20 October 2026</time></div>
@@ -85,7 +87,7 @@
             </div>
           </article>
 
-          <article class="news-item reveal" id="cleanup">
+          <article class="news-item reveal" data-sample id="cleanup">
             <img src="images/valley.svg" alt="Green valley outside the town" loading="lazy" />
             <div class="news-item__body">
               <div class="card__meta"><span class="tag">Community</span><time datetime="2026-10-05">5 October 2026</time></div>
@@ -99,7 +101,7 @@
             </div>
           </article>
 
-          <article class="news-item reveal" id="school">
+          <article class="news-item reveal" data-sample id="school">
             <img src="images/dawn.svg" alt="Town at dawn" loading="lazy" />
             <div class="news-item__body">
               <div class="card__meta"><span class="tag">Projects</span><time datetime="2026-09-12">12 September 2026</time></div>
@@ -167,6 +169,8 @@
 
   <a class="fab-donate" href="donate.html"><svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 21s-7.5-4.6-9.5-9.2C1 8.3 3.2 5 6.6 5c2 0 3.5 1.1 4.4 2.5C12 6.1 13.4 5 15.4 5c3.4 0 5.6 3.3 4.1 6.8C19.5 16.4 12 21 12 21Z"/></svg>Donate</a>
 
-  <script src="js/main.js"></script>
+  <script src="js/config.js?v=8a167446"></script>
+  <script src="js/main.js?v=cd7a67a6"></script>
+  <script src="js/live.js?v=f48872e1"></script>
 </body>
 </html>

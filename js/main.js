@@ -34,6 +34,11 @@ const IMPACT = [
   { cost: 15000, one: "solar street light",             many: "solar street lights",            icon: "light" },
 ];
 
+/* Escape text before putting it into HTML. */
+function esc(s) {
+  return String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+}
+
 /* ---------- Mobile menu ---------- */
 const toggle = document.querySelector(".nav__toggle");
 const links = document.querySelector(".nav__links");
@@ -50,47 +55,59 @@ document.querySelectorAll("[data-year]").forEach((el) => (el.textContent = new D
 /* ---------- Fundraising progress (with count-up animation) ---------- */
 const fmt = (n) => Math.round(n).toLocaleString("en-US");
 const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-const pct = Math.min(100, Math.round((FUNDRAISER.raised / FUNDRAISER.goal) * 100));
 
 function countUp(el, target, suffix = "") {
   if (reduceMotion) { el.textContent = fmt(target) + suffix; return; }
-  const start = performance.now(), dur = 1600;
+  const from = Number(el.dataset.shown || 0), start = performance.now(), dur = 1600;
+  el.dataset.shown = target;
   const tick = (now) => {
     const t = Math.min(1, (now - start) / dur);
-    el.textContent = fmt(target * (1 - Math.pow(1 - t, 3))) + suffix;
+    el.textContent = fmt(from + (target - from) * (1 - Math.pow(1 - t, 3))) + suffix;
     if (t < 1) requestAnimationFrame(tick);
   };
   requestAnimationFrame(tick);
 }
-const cur = " " + FUNDRAISER.currency;
-document.querySelectorAll("[data-raised]").forEach((el) => countUp(el, FUNDRAISER.raised, cur));
-document.querySelectorAll("[data-goal]").forEach((el) => (el.textContent = fmt(FUNDRAISER.goal) + cur));
-document.querySelectorAll("[data-donors]").forEach((el) => countUp(el, FUNDRAISER.donors));
-document.querySelectorAll("[data-percent]").forEach((el) => (el.textContent = pct + "%"));
-document.querySelectorAll("[data-updated]").forEach((el) => (el.textContent = FUNDRAISER.updated));
-document.querySelectorAll(".bar__fill").forEach((bar) => setTimeout(() => (bar.style.width = pct + "%"), 150));
 
-/* Countdown to campaign deadline */
-document.querySelectorAll("[data-countdown]").forEach((el) => {
-  if (!FUNDRAISER.deadline) return el.remove();
-  const days = Math.ceil((new Date(FUNDRAISER.deadline + "T23:59:59") - new Date()) / 86400000);
-  if (days < 0) return el.remove();
-  el.textContent = days === 0 ? "⏳ Last day!" : `⏳ ${fmt(days)} day${days === 1 ? "" : "s"} left`;
-});
+// Draws the progress card. Called with the numbers above, and again with live
+// numbers from the database once the site is connected to Supabase.
+function renderProgress(f) {
+  const pct = f.goal > 0 ? Math.min(100, Math.round((f.raised / f.goal) * 100)) : 0;
+  const cur = " " + f.currency;
+  document.querySelectorAll("[data-raised]").forEach((el) => countUp(el, f.raised, cur));
+  document.querySelectorAll("[data-goal]").forEach((el) => (el.textContent = fmt(f.goal) + cur));
+  document.querySelectorAll("[data-donors]").forEach((el) => countUp(el, f.donors));
+  document.querySelectorAll("[data-percent]").forEach((el) => (el.textContent = pct + "%"));
+  document.querySelectorAll("[data-updated]").forEach((el) => (el.textContent = f.updated));
+  document.querySelectorAll(".bar__fill").forEach((bar) => setTimeout(() => (bar.style.width = pct + "%"), 150));
+  document.querySelectorAll("[data-currency]").forEach((el) => (el.textContent = f.currency));
+  // Countdown to campaign deadline
+  document.querySelectorAll("[data-countdown]").forEach((el) => {
+    const days = f.deadline ? Math.ceil((new Date(f.deadline + "T23:59:59") - new Date()) / 86400000) : -1;
+    el.hidden = days < 0;
+    if (days >= 0) el.textContent = days === 0 ? "⏳ Last day!" : `⏳ ${fmt(days)} day${days === 1 ? "" : "s"} left`;
+  });
+}
+// With Supabase connected (js/config.js), js/live.js draws the real numbers instead.
+const LIVE = Boolean(window.ANCHARO_CONFIG && window.ANCHARO_CONFIG.supabaseUrl && window.ANCHARO_CONFIG.supabaseAnonKey);
+if (!LIVE) renderProgress(FUNDRAISER);
 
 /* ---------- Supporters wall ---------- */
-document.querySelectorAll("[data-supporters]").forEach((wrap) => {
-  const section = wrap.closest("section");
-  if (!SUPPORTERS.length) return section && section.remove();
-  const initials = (n) => n === "Anonymous" ? "♥" : n.split(/\s+/).filter((w) => /^[A-Z]/.test(w)).slice(0, 2).map((w) => w[0]).join("") || "♥";
-  const pill = (d) =>
-    `<div class="supporter"><span class="supporter__avatar">${initials(d.name)}</span>` +
-    `<span class="supporter__name">${d.name.replace(/</g, "&lt;")}</span>` +
-    (d.amount ? `<span class="supporter__amt">${fmt(d.amount)} ${FUNDRAISER.currency}</span>` : "") + `</div>`;
-  const items = SUPPORTERS.map(pill).join("");
-  // The list is repeated once so the scrolling loop is seamless.
-  wrap.innerHTML = `<div class="supporters__track">${items}<div style="display:contents" aria-hidden="true">${items}</div></div>`;
-});
+function renderSupporters(list) {
+  document.querySelectorAll("[data-supporters]").forEach((wrap) => {
+    const section = wrap.closest("section");
+    if (section) section.hidden = !list.length;
+    if (!list.length) return;
+    const initials = (n) => n === "Anonymous" ? "♥" : n.split(/\s+/).filter((w) => /^\p{Lu}/u.test(w)).slice(0, 2).map((w) => w[0]).join("") || "♥";
+    const pill = (d) =>
+      `<div class="supporter"><span class="supporter__avatar">${esc(initials(d.name))}</span>` +
+      `<span class="supporter__name">${esc(d.name)}</span>` +
+      (d.amount ? `<span class="supporter__amt">${fmt(d.amount)} ${esc(FUNDRAISER.currency)}</span>` : "") + `</div>`;
+    const items = list.map(pill).join("");
+    // The list is repeated once so the scrolling loop is seamless.
+    wrap.innerHTML = `<div class="supporters__track">${items}<div style="display:contents" aria-hidden="true">${items}</div></div>`;
+  });
+}
+renderSupporters(LIVE ? [] : SUPPORTERS);
 
 /* ---------- Impact calculator ---------- */
 const ICONS = {
@@ -104,7 +121,6 @@ document.querySelectorAll("[data-impact]").forEach((box) => {
   const range = box.querySelector(".impact__range");
   const list = box.querySelector(".impact__list");
   const presets = box.querySelectorAll("[data-amount]");
-  box.querySelectorAll("[data-currency]").forEach((el) => (el.textContent = FUNDRAISER.currency));
   const render = (amount) => {
     amount = Math.max(0, Number(amount) || 0);
     list.innerHTML = IMPACT.map((it) => {
@@ -144,22 +160,18 @@ if (fab) {
 }
 
 /* ---------- Reveal on scroll ---------- */
-const revealEls = document.querySelectorAll(".reveal");
-if ("IntersectionObserver" in window) {
-  const io = new IntersectionObserver(
-    (entries) =>
-      entries.forEach((e) => {
-        if (e.isIntersecting) {
-          e.target.classList.add("is-visible");
-          io.unobserve(e.target);
-        }
+const io = "IntersectionObserver" in window
+  ? new IntersectionObserver(
+      (entries) => entries.forEach((e) => {
+        if (e.isIntersecting) { e.target.classList.add("is-visible"); io.unobserve(e.target); }
       }),
-    { threshold: 0.12 }
-  );
-  revealEls.forEach((el) => io.observe(el));
-} else {
-  revealEls.forEach((el) => el.classList.add("is-visible"));
+      { threshold: 0.12 }
+    )
+  : null;
+function reveal(root = document) {
+  root.querySelectorAll(".reveal:not(.is-visible)").forEach((el) => (io ? io.observe(el) : el.classList.add("is-visible")));
 }
+reveal();
 
 /* ---------- Toast ---------- */
 let toastTimer;
@@ -178,49 +190,53 @@ function toast(msg) {
 }
 
 /* ---------- Copy account numbers ---------- */
-document.querySelectorAll("[data-copy]").forEach((btn) => {
-  btn.addEventListener("click", async () => {
-    const text = btn.getAttribute("data-copy");
-    try {
-      await navigator.clipboard.writeText(text);
-    } catch {
-      const ta = document.createElement("textarea");
-      ta.value = text;
-      document.body.appendChild(ta);
-      ta.select();
-      document.execCommand("copy");
-      ta.remove();
-    }
-    const label = btn.textContent;
-    btn.textContent = "Copied ✓";
-    btn.classList.add("is-copied");
-    toast("Copied to clipboard");
-    setTimeout(() => {
-      btn.textContent = label;
-      btn.classList.remove("is-copied");
-    }, 1800);
-  });
+document.addEventListener("click", async (e) => {
+  const btn = e.target.closest("[data-copy]");
+  if (!btn) return;
+  const text = btn.getAttribute("data-copy");
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    const ta = document.createElement("textarea");
+    ta.value = text;
+    document.body.appendChild(ta);
+    ta.select();
+    document.execCommand("copy");
+    ta.remove();
+  }
+  const label = btn.dataset.label || (btn.dataset.label = btn.textContent);
+  btn.textContent = "Copied ✓";
+  btn.classList.add("is-copied");
+  toast("Copied to clipboard");
+  setTimeout(() => {
+    btn.textContent = label;
+    btn.classList.remove("is-copied");
+  }, 1800);
 });
 
 /* ---------- Gallery filters ---------- */
+const galleryItems = () => [...document.querySelectorAll(".gallery__item")];
+let galleryFilter = "all";
+function applyGalleryFilter() {
+  galleryItems().forEach((it) => it.classList.toggle("is-hidden", galleryFilter !== "all" && it.dataset.cat !== galleryFilter));
+}
 const filters = document.querySelectorAll(".filter");
-const items = document.querySelectorAll(".gallery__item");
 filters.forEach((f) =>
   f.addEventListener("click", () => {
     filters.forEach((x) => x.classList.remove("is-active"));
     f.classList.add("is-active");
-    const cat = f.dataset.filter;
-    items.forEach((it) => it.classList.toggle("is-hidden", cat !== "all" && it.dataset.cat !== cat));
+    galleryFilter = f.dataset.filter;
+    applyGalleryFilter();
   })
 );
 
-/* ---------- Gallery lightbox ---------- */
+/* ---------- Gallery lightbox (works for photos added later too) ---------- */
 const lb = document.querySelector(".lightbox");
-if (lb && items.length) {
+if (lb) {
   const lbImg = lb.querySelector("img");
   const lbCap = lb.querySelector(".lightbox__caption");
   let current = 0;
-  const visible = () => [...items].filter((it) => !it.classList.contains("is-hidden"));
+  const visible = () => galleryItems().filter((it) => !it.classList.contains("is-hidden"));
   const show = (i) => {
     const list = visible();
     current = (i + list.length) % list.length;
@@ -239,11 +255,16 @@ if (lb && items.length) {
     lb.classList.remove("is-open");
     document.body.style.overflow = "";
   };
-  items.forEach((it) => {
-    it.tabIndex = 0;
-    it.addEventListener("click", () => open(it));
-    it.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), open(it)));
+  document.addEventListener("click", (e) => {
+    const it = e.target.closest(".gallery__item");
+    if (it) open(it);
   });
+  document.addEventListener("keydown", (e) => {
+    const it = e.target.closest?.(".gallery__item");
+    if (it && (e.key === "Enter" || e.key === " ")) { e.preventDefault(); open(it); }
+  });
+  const makeFocusable = () => galleryItems().forEach((it) => (it.tabIndex = 0));
+  makeFocusable();
   lb.querySelector(".lightbox__close").addEventListener("click", close);
   lb.querySelector(".lightbox__prev").addEventListener("click", () => show(current - 1));
   lb.querySelector(".lightbox__next").addEventListener("click", () => show(current + 1));
@@ -254,6 +275,7 @@ if (lb && items.length) {
     if (e.key === "ArrowLeft") show(current - 1);
     if (e.key === "ArrowRight") show(current + 1);
   });
+  window.__galleryChanged = () => { makeFocusable(); applyGalleryFilter(); };
 }
 
 /* ---------- Share buttons ---------- */
@@ -310,3 +332,9 @@ if (qrBox && window.qrcode) {
 } else if (qrBox) {
   qrBox.closest(".qr")?.remove();
 }
+
+/* Shared helpers used by js/live.js, js/account.js and js/admin.js */
+window.Ancharo = {
+  FUNDRAISER, fmt, esc, toast, reveal, renderProgress, renderSupporters,
+  galleryChanged: () => window.__galleryChanged && window.__galleryChanged(),
+};

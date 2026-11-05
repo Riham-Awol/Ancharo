@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My account — Ancharo</title>
+  <meta name="description" content="Upload your donation receipt and follow its status." />
+  <meta name="robots" content="noindex" />
+  <meta name="theme-color" content="#2f5d46" />
+  <!-- Link preview when shared on WhatsApp, Telegram, Facebook… -->
+  <meta property="og:type" content="website" />
+  <meta property="og:site_name" content="Rebuild Ancharo" />
+  <meta property="og:title" content="My account — Ancharo" />
+  <meta property="og:description" content="Upload your donation receipt and follow its status." />
+  <meta property="og:image" content="https://ancharo.vercel.app/images/og-image.jpg" />
+  <meta property="og:url" content="https://ancharo.vercel.app/" />
+  <meta name="twitter:card" content="summary_large_image" />
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css?v=e0e4232d" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="site-header">
+    <nav class="container nav" aria-label="Main">
+      <a class="brand" href="index.html">
+        <span class="brand__mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#faf6ef"/></svg></span>
+        <span class="brand__name">Ancharo</span>
+      </a>
+      <button class="nav__toggle" aria-label="Open menu" aria-expanded="false">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="gallery.html">Gallery</a></li>
+        <li><a href="news.html">News</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a class="btn btn--gold" href="donate.html">Donate</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-hero page-hero--slim" style="background-image:url('images/hero.jpg')">
+      <div class="container">
+        <span class="eyebrow">My account</span>
+        <h1 data-account-title>Your donations</h1>
+        <p>Sent a donation? Upload your receipt screenshot here. Our team checks it and adds it to the total.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+
+        <!-- Shown until Supabase is connected (js/config.js) -->
+        <div data-view="setup" class="panel panel--narrow" hidden>
+          <h2>Accounts are coming soon</h2>
+          <p>Online receipt uploads aren't switched on yet. In the meantime, please send a screenshot of your receipt to <a href="mailto:info@example.com">info@example.com</a>.</p>
+          <a class="btn btn--green" href="donate.html">Back to donate</a>
+        </div>
+
+        <div data-view="loading" class="loading">Loading…</div>
+
+        <!-- ============ SIGN IN / SIGN UP ============ -->
+        <div data-view="auth" class="auth" hidden>
+          <div class="panel auth__card">
+            <div class="tabs" role="tablist">
+              <button class="tab is-active" type="button" role="tab" data-auth-tab="signin" aria-selected="true">Sign in</button>
+              <button class="tab" type="button" role="tab" data-auth-tab="signup" aria-selected="false">Create account</button>
+            </div>
+
+            <form class="form" data-form="signin">
+              <label>Email<input type="email" name="email" autocomplete="email" required /></label>
+              <label>Password<input type="password" name="password" autocomplete="current-password" required /></label>
+              <button class="btn btn--green btn--block" type="submit">Sign in</button>
+              <button class="link-btn" type="button" data-auth-tab="forgot">Forgot your password?</button>
+            </form>
+
+            <form class="form" data-form="signup" hidden>
+              <label>Full name<input type="text" name="full_name" autocomplete="name" maxlength="120" required /></label>
+              <label>Phone <span class="opt">(optional)</span><input type="tel" name="phone" autocomplete="tel" maxlength="40" /></label>
+              <label>Email<input type="email" name="email" autocomplete="email" required /></label>
+              <label>Password <span class="opt">(at least 8 characters)</span><input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
+              <button class="btn btn--green btn--block" type="submit">Create account</button>
+            </form>
+
+            <form class="form" data-form="forgot" hidden>
+              <p>Enter your email and we'll send you a link to choose a new password.</p>
+              <label>Email<input type="email" name="email" autocomplete="email" required /></label>
+              <button class="btn btn--green btn--block" type="submit">Send reset link</button>
+              <button class="link-btn" type="button" data-auth-tab="signin">← Back to sign in</button>
+            </form>
+
+            <form class="form" data-form="reset" hidden>
+              <p>Choose a new password for your account.</p>
+              <label>New password<input type="password" name="password" autocomplete="new-password" minlength="8" required /></label>
+              <button class="btn btn--green btn--block" type="submit">Save new password</button>
+            </form>
+
+            <p class="form-msg" data-auth-msg role="status"></p>
+          </div>
+          <div class="auth__side">
+            <h2>Why create an account?</h2>
+            <ul class="values">
+              <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Upload your receipt screenshot in seconds</span></li>
+              <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>See when your donation is confirmed</span></li>
+              <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Get a thank-you certificate to share</span></li>
+              <li><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5"/></svg><span>Choose whether your name appears on the supporters wall</span></li>
+            </ul>
+            <p class="muted">Your receipts are private: only you and the campaign admins can see them.</p>
+          </div>
+        </div>
+
+        <!-- ============ DASHBOARD ============ -->
+        <div data-view="dash" hidden>
+          <div class="dash-head">
+            <div>
+              <h2>Hello, <span data-user-name></span> 👋</h2>
+              <p class="muted" data-user-email></p>
+            </div>
+            <div class="dash-head__actions">
+              <a class="btn btn--ghost btn--small" href="admin.html" data-admin-only hidden>Admin panel</a>
+              <button class="btn btn--ghost btn--small" type="button" data-signout>Sign out</button>
+            </div>
+          </div>
+
+          <div class="dash-grid">
+            <div class="panel" id="submit">
+              <h2>Submit a donation</h2>
+              <p class="muted">Send your donation to one of the <a href="donate.html">accounts on the donate page</a> first, then fill this in.</p>
+              <form class="form" data-form="donation">
+                <div class="form-row">
+                  <label>Amount (<span data-currency>ETB</span>)<input type="number" name="amount" min="1" step="any" inputmode="decimal" required /></label>
+                  <label>Date sent<input type="date" name="donated_on" required /></label>
+                </div>
+                <!-- Keep these options the same as the accounts on donate.html -->
+                <label>Sent with
+                  <select name="method" required>
+                    <option value="">Choose…</option>
+                    <option>Commercial Bank of Ethiopia</option>
+                    <option>Awash Bank</option>
+                    <option>telebirr</option>
+                    <option>International transfer</option>
+                    <option>Other</option>
+                  </select>
+                </label>
+                <label>Transaction reference <span class="opt">(optional)</span><input type="text" name="reference" maxlength="120" placeholder="e.g. FT26309XYZ" /></label>
+
+                <label class="drop" data-drop>
+                  <input type="file" name="screenshot" accept="image/*,application/pdf" required />
+                  <span class="drop__empty">
+                    <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                    <strong>Upload receipt screenshot</strong>
+                    <small>Tap to choose a photo or PDF (max 6 MB)</small>
+                  </span>
+                  <span class="drop__preview" hidden><img alt="Receipt preview" /><span class="drop__name"></span></span>
+                </label>
+
+                <label>Message <span class="opt">(optional)</span><textarea name="message" rows="2" maxlength="1000" placeholder="A few words for the team or the city"></textarea></label>
+
+                <label class="check"><input type="checkbox" name="show_name" /> Show my name on the supporters wall</label>
+                <label data-display-name hidden>Name to show<input type="text" name="display_name" maxlength="80" placeholder="e.g. The Mohammed family" /></label>
+
+                <button class="btn btn--gold btn--block" type="submit">Submit for review</button>
+                <p class="form-msg" data-donation-msg role="status"></p>
+              </form>
+            </div>
+
+            <div>
+              <div class="panel">
+                <div class="panel__head">
+                  <h2>My donations</h2>
+                  <span class="muted" data-my-total></span>
+                </div>
+                <div class="my-list" data-my-donations><p class="muted">Loading…</p></div>
+              </div>
+
+              <details class="panel panel--details">
+                <summary>Edit my details</summary>
+                <form class="form" data-form="profile">
+                  <label>Full name<input type="text" name="full_name" maxlength="120" required /></label>
+                  <label>Phone <span class="opt">(optional)</span><input type="tel" name="phone" maxlength="40" /></label>
+                  <button class="btn btn--green" type="submit">Save</button>
+                  <p class="form-msg" data-profile-msg role="status"></p>
+                </form>
+              </details>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="index.html">
+            <span class="brand__mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#faf6ef"/></svg></span>
+            <span class="brand__name">Ancharo</span>
+          </a>
+          <p>A community effort to rebuild and renew our city, for the people who live here today and the generations to come.</p>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="news.html">News</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="donate.html">Donate</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:info@example.com">info@example.com</a></li>
+            <li><a href="tel:+251000000000">+251 00 000 0000</a></li>
+            <li>Ancharo, Ethiopia</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> Rebuild Ancharo. Made with love for our city.</span>
+        <a href="donate.html">Support the city →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/config.js?v=8a167446"></script>
+  <script src="js/main.js?v=cd7a67a6"></script>
+  <script src="js/live.js?v=f48872e1"></script>
+  <script src="js/account.js?v=a1eefd40"></script>
+</body>
+</html>

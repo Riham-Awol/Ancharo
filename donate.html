@@ -11,13 +11,14 @@
   <meta property="og:site_name" content="Rebuild Ancharo" />
   <meta property="og:title" content="Donate — Ancharo" />
   <meta property="og:description" content="Bank accounts and simple steps to donate to the Rebuild Ancharo campaign." />
-  <meta property="og:image" content="/images/og-image.jpg" />
+  <meta property="og:image" content="https://ancharo.vercel.app/images/og-image.jpg" />
+  <meta property="og:url" content="https://ancharo.vercel.app/" />
   <meta name="twitter:card" content="summary_large_image" />
   <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-  <link rel="stylesheet" href="css/styles.css" />
+  <link rel="stylesheet" href="css/styles.css?v=e0e4232d" />
 </head>
 <body>
 
@@ -57,6 +58,11 @@
           <h2>Where to send your donation</h2>
           <p class="lead">Tap <strong>Copy</strong> to copy an account number, then paste it into your banking app.</p>
         </div>
+        <a class="receipt-cta reveal" href="account.html#submit">
+          <span class="receipt-cta__icon" aria-hidden="true">🧾</span>
+          <span><strong>Already donated?</strong> Upload your receipt screenshot so we can confirm it and thank you.</span>
+          <span class="receipt-cta__go">Upload receipt →</span>
+        </a>
 
         <!--
           ⚠️ REPLACE THE PLACEHOLDER ACCOUNTS BELOW WITH YOUR REAL ONES ⚠️
@@ -140,7 +146,7 @@
           <ol class="steps">
             <li><strong>Choose an account</strong><span>Pick whichever bank or mobile money service is easiest for you.</span></li>
             <li><strong>Send your donation</strong><span>Any amount helps. Add "Ancharo" as the reason or reference.</span></li>
-            <li><strong>Tell us (optional)</strong><span>Send a screenshot of your receipt to <a href="mailto:info@example.com">info@example.com</a> so we can thank you and count you in our updates.</span></li>
+            <li><strong>Upload your receipt</strong><span>Take a screenshot of your receipt and <a href="account.html#submit">upload it here</a>. Once our team confirms it, it's added to the total and you get a thank-you certificate.</span></li>
           </ol>
         </div>
         <div class="reveal">
@@ -152,6 +158,24 @@
             <div class="amount-chip"><strong>15,000 ETB</strong><span>one solar street light</span></div>
           </div>
           <p class="notice">🔒 <strong>Stay safe:</strong> we only use the accounts listed on this page. We will never ask you to send money to a personal account by phone or message.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Filled automatically from the Spending tab of the Admin panel (hidden until there is something to show) -->
+    <section class="section" data-spending hidden>
+      <div class="container">
+        <div class="section__head">
+          <span class="eyebrow">Transparency</span>
+          <h2>Where the money went</h2>
+          <p class="lead">Every birr spent is recorded here, with receipts where we have them.</p>
+        </div>
+        <div class="spend-summary" data-spending-summary></div>
+        <div class="panel table-wrap">
+          <table class="table">
+            <thead><tr><th>Date</th><th>Project</th><th>What</th><th class="num">Amount</th></tr></thead>
+            <tbody></tbody>
+          </table>
         </div>
       </div>
     </section>
@@ -231,7 +255,9 @@
     </div>
   </footer>
 
-  <script src="js/vendor/qrcode.js"></script>
-  <script src="js/main.js"></script>
+  <script src="js/config.js?v=8a167446"></script>
+  <script src="js/vendor/qrcode.js?v=fbb6b69b"></script>
+  <script src="js/main.js?v=cd7a67a6"></script>
+  <script src="js/live.js?v=f48872e1"></script>
 </body>
 </html>
