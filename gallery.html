@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gallery — Ancharo</title>
+  <meta name="description" content="Photos of Ancharo: its landscapes, city life and the projects we're building together." />
+  <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <!-- ================= HEADER ================= -->
+  <header class="site-header">
+    <nav class="container nav" aria-label="Main">
+      <a class="brand" href="index.html">
+        <span class="brand__mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#faf6ef"/></svg></span>
+        <span class="brand__name">Ancharo</span>
+      </a>
+      <button class="nav__toggle" aria-label="Open menu" aria-expanded="false">
+        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
+      </button>
+      <ul class="nav__links">
+        <li><a href="index.html">Home</a></li>
+        <li><a href="gallery.html" aria-current="page">Gallery</a></li>
+        <li><a href="news.html">News</a></li>
+        <li><a href="about.html">About</a></li>
+        <li><a class="btn btn--gold" href="donate.html">Donate</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section class="page-hero" style="background-image:url('images/dusk.svg')">
+      <div class="container">
+        <span class="eyebrow">Gallery</span>
+        <h1>Ancharo through our eyes</h1>
+        <p>Hills at sunrise, busy market mornings, quiet nights, and the projects that are changing our streets.</p>
+      </div>
+    </section>
+
+    <section class="section">
+      <div class="container">
+        <div class="filters" role="group" aria-label="Filter photos">
+          <button class="filter is-active" data-filter="all">All</button>
+          <button class="filter" data-filter="landscape">Landscapes</button>
+          <button class="filter" data-filter="city">City life</button>
+          <button class="filter" data-filter="projects">Projects</button>
+        </div>
+
+        <!--
+          To add a photo: copy one <figure> block, change the image path,
+          the alt text, the caption, and data-cat (landscape / city / projects).
+          Size classes: gallery__item--wide, gallery__item--tall, gallery__item--square
+        -->
+        <div class="gallery">
+          <figure class="gallery__item gallery__item--wide" data-cat="landscape">
+            <img src="images/hero.svg" alt="Ancharo at golden hour" loading="lazy" />
+            <figcaption>Golden hour over Ancharo</figcaption>
+          </figure>
+          <figure class="gallery__item gallery__item--tall" data-cat="landscape">
+            <img src="images/highlands.svg" alt="Green highlands around the town" loading="lazy" />
+            <figcaption>The highlands after the rains</figcaption>
+          </figure>
+          <figure class="gallery__item gallery__item--square" data-cat="city">
+            <img src="images/market.svg" alt="The market district in daylight" loading="lazy" />
+            <figcaption>Market day</figcaption>
+          </figure>
+          <figure class="gallery__item gallery__item--wide" data-cat="city">
+            <img src="images/night.svg" alt="The city lit up at night" loading="lazy" />
+            <figcaption>Ancharo by night</figcaption>
+          </figure>
+          <figure class="gallery__item gallery__item--tall" data-cat="projects">
+            <img src="images/roadwork.svg" alt="Main road under repair" loading="lazy" />
+            <figcaption>Main road repair, phase one</figcaption>
+          </figure>
+          <figure class="gallery__item gallery__item--wide" data-cat="landscape">
+            <img src="images/valley.svg" alt="The valley outside town" loading="lazy" />
+            <figcaption>The valley road</figcaption>
+          </figure>
+          <figure class="gallery__item gallery__item--square" data-cat="city">
+            <img src="images/dawn.svg" alt="The town waking up at dawn" loading="lazy" />
+            <figcaption>Morning comes to town</figcaption>
+          </figure>
+          <figure class="gallery__item gallery__item--wide" data-cat="landscape">
+            <img src="images/dusk.svg" alt="Purple dusk over the city" loading="lazy" />
+            <figcaption>Dusk from the eastern hill</figcaption>
+          </figure>
+          <figure class="gallery__item gallery__item--square" data-cat="projects">
+            <img src="images/dawn.svg" alt="The renovated primary school area" loading="lazy" />
+            <figcaption>School renovation, completed</figcaption>
+          </figure>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--sand">
+      <div class="container">
+        <div class="cta-band reveal">
+          <div>
+            <h2>Have photos of Ancharo?</h2>
+            <p>We'd love to show them here. Send your favourite shots of the city and its people to our team.</p>
+          </div>
+          <a class="btn btn--gold" href="mailto:info@example.com?subject=Photos%20for%20the%20gallery">Send photos</a>
+        </div>
+      </div>
+    </section>
+
+    <div class="lightbox" role="dialog" aria-modal="true" aria-label="Photo viewer">
+      <button class="lightbox__close" aria-label="Close">×</button>
+      <button class="lightbox__prev" aria-label="Previous photo">‹</button>
+      <div class="lightbox__inner">
+        <img src="" alt="" />
+        <div class="lightbox__caption"></div>
+      </div>
+      <button class="lightbox__next" aria-label="Next photo">›</button>
+    </div>
+  </main>
+
+  <!-- ================= FOOTER ================= -->
+  <footer class="site-footer">
+    <div class="container">
+      <div class="footer-grid">
+        <div>
+          <a class="brand" href="index.html">
+            <span class="brand__mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#faf6ef"/></svg></span>
+            <span class="brand__name">Ancharo</span>
+          </a>
+          <p>A community effort to rebuild and renew our city, for the people who live here today and the generations to come.</p>
+        </div>
+        <div>
+          <h4>Explore</h4>
+          <ul>
+            <li><a href="index.html">Home</a></li>
+            <li><a href="gallery.html">Gallery</a></li>
+            <li><a href="news.html">News</a></li>
+            <li><a href="about.html">About</a></li>
+            <li><a href="donate.html">Donate</a></li>
+          </ul>
+        </div>
+        <div>
+          <h4>Contact</h4>
+          <ul>
+            <li><a href="mailto:info@example.com">info@example.com</a></li>
+            <li><a href="tel:+251000000000">+251 00 000 0000</a></li>
+            <li>Ancharo, Ethiopia</li>
+          </ul>
+        </div>
+      </div>
+      <div class="footer-bottom">
+        <span>© <span data-year>2026</span> Rebuild Ancharo. Made with love for our city.</span>
+        <a href="donate.html">Support the city →</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="js/main.js"></script>
+</body>
+</html>
