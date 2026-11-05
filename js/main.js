@@ -346,8 +346,117 @@ if (qrBox && window.qrcode) {
   qrBox.closest(".qr")?.remove();
 }
 
+/* ==========================================================
+   3D EFFECTS
+   ========================================================== */
+const canHover = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+
+/* ---------- Cards lean toward the mouse ---------- */
+const TILT = ".card, .why, .way, .account, .amount-chip, .kpi";
+if (canHover && !reduceMotion) {
+  let current = null;
+  const reset = (el) => { el.classList.remove("is-tilting"); el.style.transform = ""; };
+  document.addEventListener("pointermove", (e) => {
+    const el = e.target.closest(TILT);
+    if (current && current !== el) { reset(current); current = null; }
+    if (!el || e.target.closest("input, select, textarea")) return;
+    if (!el.classList.contains("tilt")) el.classList.add("tilt");
+    current = el;
+    const r = el.getBoundingClientRect();
+    const x = (e.clientX - r.left) / r.width, y = (e.clientY - r.top) / r.height;
+    const max = r.width > 420 ? 4 : 8; // big panels lean less
+    el.classList.add("is-tilting");
+    el.style.transform = `perspective(900px) rotateX(${(0.5 - y) * max}deg) rotateY(${(x - 0.5) * max}deg) translateZ(6px)`;
+    el.style.setProperty("--gx", `${x * 100}%`);
+    el.style.setProperty("--gy", `${y * 100}%`);
+  }, { passive: true });
+  document.addEventListener("pointerleave", () => current && reset(current));
+}
+
+/* ---------- Home: background and hero text move with the mouse (depth) ---------- */
+if (document.body.classList.contains("home") && canHover && !reduceMotion) {
+  let raf = 0;
+  window.addEventListener("pointermove", (e) => {
+    if (raf || window.scrollY > window.innerHeight) return;
+    raf = requestAnimationFrame(() => {
+      raf = 0;
+      const dx = e.clientX / window.innerWidth - 0.5, dy = e.clientY / window.innerHeight - 0.5;
+      document.body.style.setProperty("--px", `${(-dx * 26).toFixed(1)}px`);
+      document.body.style.setProperty("--py", `${(-dy * 18).toFixed(1)}px`);
+    });
+  }, { passive: true });
+}
+
+/* ---------- 3D photo ring: spins slowly, drag / swipe / arrow keys to turn ---------- */
+function setupRing(ring) {
+  const spinner = ring.querySelector(".ring__spinner");
+  let items = [], step = 45, angle = 0, velocity = 0, dragging = false, moved = 0, lastX = 0, lastT = 0, visible = false, idleUntil = 0;
+  const layout = () => {
+    items = [...spinner.querySelectorAll(".ring__item")];
+    const n = Math.max(items.length, 3);
+    step = 360 / n;
+    ring.style.setProperty("--n", n);
+    const w = spinner.offsetWidth || 200;
+    ring.style.setProperty("--r", `${Math.round(w / 2 / Math.tan(Math.PI / n) + (w < 180 ? 10 : 26))}px`);
+    items.forEach((it, i) => it.style.setProperty("--i", i));
+  };
+  const render = () => spinner.style.setProperty("--angle", `${angle}deg`);
+  layout();
+  window.addEventListener("resize", layout);
+  new IntersectionObserver((es) => (visible = es[0].isIntersecting)).observe(ring);
+
+  // gentle auto-spin + momentum after a swipe
+  let prev = performance.now();
+  const tick = (now) => {
+    const dt = Math.min(64, now - prev) / 1000;
+    prev = now;
+    if (visible && !dragging) {
+      if (Math.abs(velocity) > 0.5) { angle += velocity * dt; velocity *= Math.pow(0.04, dt); }
+      else if (!reduceMotion && now > idleUntil) angle -= 7 * dt;
+      render();
+    }
+    requestAnimationFrame(tick);
+  };
+  requestAnimationFrame(tick);
+
+  ring.addEventListener("pointerdown", (e) => {
+    dragging = true; moved = 0; lastX = e.clientX; lastT = performance.now(); velocity = 0;
+    ring.classList.add("is-dragging");
+  });
+  window.addEventListener("pointermove", (e) => {
+    if (!dragging) return;
+    const dx = e.clientX - lastX, now = performance.now();
+    moved += Math.abs(dx);
+    if (moved > 6 && !ring.hasPointerCapture?.(e.pointerId)) { try { ring.setPointerCapture(e.pointerId); } catch {} }
+    angle += dx * 0.35;
+    velocity = (dx * 0.35) / Math.max(0.016, (now - lastT) / 1000);
+    lastX = e.clientX; lastT = now;
+    render();
+  });
+  const end = () => {
+    if (!dragging) return;
+    dragging = false; idleUntil = performance.now() + 2500;
+    ring.classList.remove("is-dragging");
+  };
+  window.addEventListener("pointerup", end);
+  window.addEventListener("pointercancel", end);
+  // a drag is not a click
+  ring.addEventListener("click", (e) => { if (moved > 8) { e.preventDefault(); e.stopPropagation(); } }, true);
+  // keyboard: arrows turn one photo
+  ring.tabIndex = 0;
+  ring.addEventListener("keydown", (e) => {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    e.preventDefault();
+    angle = Math.round(angle / step) * step + (e.key === "ArrowLeft" ? step : -step);
+    idleUntil = performance.now() + 4000; velocity = 0; render();
+  });
+  return { refresh: layout };
+}
+const rings = [...document.querySelectorAll("[data-ring]")].map(setupRing);
+
 /* Shared helpers used by js/live.js, js/account.js and js/admin.js */
 window.Ancharo = {
   FUNDRAISER, fmt, esc, toast, reveal, renderProgress, renderSupporters,
   galleryChanged: () => window.__galleryChanged && window.__galleryChanged(),
+  ringChanged: () => rings.forEach((r) => r.refresh()),
 };
