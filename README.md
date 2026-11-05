@@ -45,11 +45,11 @@ Everything you'll update regularly is at the **top of `js/main.js`**:
 3. **Contact details**: `info@example.com` and `+251 00 000 0000` appear in the footer and on several pages. Find and replace them across all `.html` files.
 4. **News and featured works**: the sample stories are examples. Edit or replace them with real updates.
 5. **Photos**: the images in `images/` are illustrated placeholders. Add real photos (e.g. `images/market-day.jpg`) and update the `src="..."` paths.
-   The big home banner is set in `css/styles.css` under `.hero` (`url("../images/hero.svg")`).
+   The big home banner is `images/hero.jpg` (set in `css/styles.css` under `.hero`). Replace that file to change it.
    The before/after slider on the home page uses `images/road-before.svg` and `images/roadwork.svg`. Use two photos taken from the same spot.
    Keep photos under about 300 KB each (resize to ~1600 px wide) so the site loads fast on mobile data.
-6. **Link preview image**: in each page's `<head>`, `og:image` is `/images/og-image.png`. Some apps (Facebook) need the full address,
-   e.g. `https://your-site.vercel.app/images/og-image.png`.
+6. **Link preview image**: in each page's `<head>`, `og:image` is `/images/og-image.jpg`. Some apps (Facebook) need the full address,
+   e.g. `https://your-site.vercel.app/images/og-image.jpg`.
 
 ## Changing the look
 
