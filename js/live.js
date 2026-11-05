@@ -309,16 +309,6 @@
 
   /* ---------- gallery photos added by admins ---------- */
   async function gallery(sb) {
-    const ring = document.querySelector("[data-ring] .ring__spinner");
-    if (ring) {
-      const { data } = await sb.from("gallery_photos").select("image_url,caption").order("created_at", { ascending: false }).limit(10);
-      if (data && data.length >= 4) {
-        ring.innerHTML = data
-          .map((p) => `<a class="ring__item" href="${pageHref("gallery")}" draggable="false"><img src="${esc(safeUrl(p.image_url))}" alt="${esc(p.caption || "Photo of Ancharo")}" loading="lazy" draggable="false" />${p.caption ? `<span>${esc(p.caption)}</span>` : ""}</a>`)
-          .join("");
-        A.ringChanged && A.ringChanged();
-      }
-    }
     const grid = document.querySelector("[data-gallery]");
     if (!grid) return;
     const { data, error } = await sb.from("gallery_photos").select("id,image_url,caption,category").order("created_at", { ascending: false });

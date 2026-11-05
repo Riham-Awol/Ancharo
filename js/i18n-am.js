@@ -168,12 +168,6 @@ I18N.add(
     "{raised} of {goal} raised": "ከ{goal} {raised} ተሰብስቧል",
     "{amount} pledged": "{amount} ቃል ተገብቷል",
 
-    "Ancharo in 3D": "አንቻሮ በ3D",
-    "Spin through our city": "ከተማችንን አሽከርክረው ይመልከቱ",
-    "Drag or swipe to turn. Tap a photo to open the gallery.": "ለማዞር ይጎትቱ ወይም ያንሸራትቱ። ፎቶዎቹን ለማየት ፎቶ ይንኩ።",
-    "Open gallery →": "ፎቶዎችን ይክፈቱ →",
-    "Photos of Ancharo, drag to turn": "የአንቻሮ ፎቶዎች፣ ለማዞር ይጎትቱ",
-
     /* ---------- gallery ---------- */
     "Ancharo through our eyes": "አንቻሮ በእኛ ዓይን",
     "Hills at sunrise, busy market mornings, quiet nights, and the projects that are changing our streets.": "ፀሐይ ስትወጣ ኮረብቶች፣ የተጨናነቁ የገበያ ጠዋቶች፣ ፀጥ ያሉ ምሽቶች እና መንገዶቻችንን እየቀየሩ ያሉ ፕሮጀክቶች።",
