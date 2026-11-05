@@ -86,7 +86,9 @@ p { margin: 0 0 1em; }
   text-decoration: none; color: var(--ink); font-weight: 500;
 }
 .nav__links a:hover { background: var(--sand); }
-.nav__links a[aria-current="page"] { background: var(--sand); color: var(--green); font-weight: 600; }
+/* Current page: yellow text, no box */
+.nav__links a:not(.btn):hover { background: none; color: #b07a17; }
+.nav__links a[aria-current="page"] { background: none; color: #b07a17; font-weight: 700; }
 .nav__links .btn { margin-left: 8px; padding: 9px 20px; }
 .nav__links .btn:hover,
 .nav__links .btn[aria-current="page"] { background: var(--gold); color: var(--ink); }
@@ -762,7 +764,7 @@ p { margin: 0 0 1em; }
 :is(body.has-overlay, body:has(> main > :is(.hero, .page-hero, .admin-top):first-child)) .site-header:not(.is-scrolled) :is(.brand, .nav__toggle, .lang-switch, .nav__links a:not(.btn)) {
   color: #fff; text-shadow: 0 1px 8px rgba(0,0,0,.25);
 }
-:is(body.has-overlay, body:has(> main > :is(.hero, .page-hero, .admin-top):first-child)) .site-header:not(.is-scrolled) .nav__links a:not(.btn):is(:hover, [aria-current="page"]) { background: rgba(255,255,255,.18); }
+:is(body.has-overlay, body:has(> main > :is(.hero, .page-hero, .admin-top):first-child)) .site-header:not(.is-scrolled) .nav__links a:not(.btn):is(:hover, [aria-current="page"]) { background: none; color: var(--gold); }
 :is(body.has-overlay, body:has(> main > :is(.hero, .page-hero, .admin-top):first-child)) .site-header:not(.is-scrolled) .lang-switch { border-color: rgba(255,255,255,.5); }
 :is(body.has-overlay, body:has(> main > :is(.hero, .page-hero, .admin-top):first-child)) .site-header:not(.is-scrolled) .lang-switch:hover { background: rgba(255,255,255,.15); }
 :is(body.has-overlay, body:has(> main > :is(.hero, .page-hero, .admin-top):first-child)) .site-header:not(.is-scrolled) .brand__mark { background: rgba(255,255,255,.2); backdrop-filter: blur(4px); }
@@ -774,6 +776,7 @@ p { margin: 0 0 1em; }
 .hero { height: clamp(500px, calc(100vh - 120px), 800px); height: clamp(500px, calc(100svh - 120px), 800px); }
 .hero__content { padding-top: 90px; padding-bottom: 130px; }
 .progress-card { margin-top: -130px; }
+.home .hero::after { background: linear-gradient(90deg, rgba(20,28,22,.55) 0%, rgba(20,28,22,.15) 60%, transparent 100%), linear-gradient(180deg, rgba(14,22,16,.1) 0%, rgba(14,22,16,.2) 50%, rgba(14,22,16,.62) 100%); }
 .hero::before {
   content: ""; position: absolute; inset: 0 0 auto 0; height: 160px; z-index: 1; pointer-events: none;
   background: linear-gradient(180deg, rgba(15,22,17,.5), transparent);
@@ -892,3 +895,38 @@ html[lang="am"] h2, html[lang="am"] h3 { line-height: 1.35; }
 .vol-card__phone { font-weight: 600; text-decoration: none; }
 .vol-card p { margin: 0; }
 body:has(.modal:not([hidden])) .fab-donate { display: none !important; }
+
+
+/* ==========================================================
+   HOME: the hill photo stays fixed behind the whole page,
+   and the sections and cards slide over it.
+   ========================================================== */
+body.home { background: #1d2a21; }
+body.home::before {
+  content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background: url("../images/hero.jpg") center 70% / cover no-repeat;
+}
+.home .hero { background: transparent; }
+.home .progress-wrap { background: rgba(14, 22, 16, .62); }
+.home main > .section, .home main > .section--sand { background: rgba(14, 22, 16, .62); color: #fff; }
+.home main > .section--sand { background: rgba(14, 22, 16, .72); }
+.home main > .section .eyebrow { color: var(--gold); }
+.home main > .section .lead { color: rgba(255, 255, 255, .85); }
+.home main > .section :is(h2, h3, p) { text-shadow: 0 1px 12px rgba(0, 0, 0, .25); }
+.home main > .section .btn--ghost { color: #fff; }
+/* cards and panels keep their light look */
+.home :is(.card, .why, .way, .impact, .panel, .share-box, .supporter, .ba, .progress-card) { color: var(--ink); }
+.home :is(.card, .why, .way, .impact, .share-box, .progress-card) :is(h2, h3, p) { text-shadow: none; }
+.home .impact__input { color: #fff; }
+.home .split__img { box-shadow: 0 20px 50px rgba(0, 0, 0, .35); }
+.home .cta-band { background: rgba(47, 93, 70, .88); backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); }
+.home .supporters { mask-image: none; }
+.home .site-footer { background: rgba(14, 20, 16, .94); }
+
+/* Sliding in: cards and text rise and fade in one after another */
+.reveal { transform: translateY(36px); transition: opacity .8s ease, transform .8s cubic-bezier(.2, .7, .2, 1); }
+.grid > .reveal:nth-child(2), .ways > .reveal:nth-child(2) { transition-delay: .12s; }
+.grid > .reveal:nth-child(3), .ways > .reveal:nth-child(3) { transition-delay: .24s; }
+.grid > .reveal:nth-child(4) { transition-delay: .36s; }
+.split > .reveal:nth-child(2), .ba-wrap > .reveal:nth-child(2) { transition-delay: .15s; }
+@media (prefers-reduced-motion: reduce) { .reveal { transform: none; transition: none; } }
