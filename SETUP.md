@@ -33,6 +33,14 @@ For that, Supabase must not ask for email confirmation:
 2. Make sure **Email** is enabled, and turn **OFF** "**Confirm email**". Save.
 3. In **Authentication → URL Configuration**, set **Site URL** to `https://ancharo.vercel.app`.
 
+> ⚠️ If "Confirm email" stays on, sign-ups fail with **"email rate limit exceeded"** (Supabase tries to email the
+> placeholder address). If anyone signed up while it was on, activate them after turning it off by running this in the SQL Editor:
+>
+> ```sql
+> update auth.users set email_confirmed_at = now()
+> where email like '%@phone.ancharo.app' and email_confirmed_at is null;
+> ```
+
 > Behind the scenes, each phone number gets a private placeholder login address (`251911223344@phone.ancharo.app`).
 > Nobody sees it and no emails are ever sent to it.
 

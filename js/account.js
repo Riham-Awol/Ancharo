@@ -66,7 +66,10 @@
       say(authMsg, T("Signing in…"));
       const { error } = await sb.auth.signInWithPassword({ email: live.phoneEmail(phone), password });
       busy(forms.signin, false);
-      if (error) say(authMsg, /invalid login/i.test(error.message) ? T("Wrong phone number or password.") : error.message, "error");
+      if (error) {
+        if (/not confirmed/i.test(error.message)) return say(authMsg, T("Your account exists but is not activated yet. Please ask a campaign admin to activate it."), "error");
+        say(authMsg, /invalid login/i.test(error.message) ? T("Wrong phone number or password.") : error.message, "error");
+      }
     });
 
     forms.signup.addEventListener("submit", async (e) => {
@@ -83,7 +86,9 @@
       });
       busy(forms.signup, false);
       if (error) {
-        return say(authMsg, /already registered|already exists/i.test(error.message) ? T("This phone number already has an account. Please sign in.") : error.message, "error");
+        if (/already registered|already exists/i.test(error.message)) return say(authMsg, T("This phone number already has an account. Please sign in."), "error");
+        if (/rate limit|confirm/i.test(error.message)) return say(authMsg, T("Sign-up is paused by a website setting. Please try again later. (Admins: turn off “Confirm email” in Supabase, see SETUP.md.)"), "error");
+        return say(authMsg, error.message, "error");
       }
       if (!data.session) say(authMsg, T("Account created, but sign-in is blocked: an admin must turn off “Confirm email” in Supabase (see SETUP.md)."), "error");
     });
