@@ -14,6 +14,6 @@
    Full step-by-step guide: SETUP.md
    ========================================================== */
 window.ANCHARO_CONFIG = {
-  supabaseUrl: "https://aglutzsncgjdpvibbwbz.supabase.com",
+  supabaseUrl: "https://aglutzsncgjdpvibbwbz.supabase.co",
   supabaseAnonKey: "sb_publishable_UWFMXARQ6cZ7XUwbz9qyCw_TJLVftBp",
 };
