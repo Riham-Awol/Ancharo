@@ -442,6 +442,8 @@ I18N.add(
     "Please check your phone number.": "እባክዎ ስልክ ቁጥርዎን ያረጋግጡ።",
     "Signing in…": "በመግባት ላይ…",
     "Wrong phone number or password.": "የተሳሳተ ስልክ ቁጥር ወይም የይለፍ ቃል።",
+    "New here?": "አዲስ ነዎት?",
+    "Create your account first →": "መጀመሪያ መለያ ይክፈቱ →",
     "Sign-up is paused by a website setting. Please try again later. (Admins: turn off “Confirm email” in Supabase, see SETUP.md.)": "በድረ-ገጹ ቅንብር ምክንያት ምዝገባ ለጊዜው ቆሟል። እባክዎ ቆይተው ይሞክሩ። (ለአስተዳዳሪዎች፦ በSupabase ውስጥ “Confirm email”ን ያጥፉ፣ SETUP.md ይመልከቱ።)",
     "Your account exists but is not activated yet. Please ask a campaign admin to activate it.": "መለያዎ አለ ግን ገና አልነቃም። እባክዎ የዘመቻውን አስተዳዳሪ እንዲያነቁት ይጠይቁ።",
     "Creating your account…": "መለያዎን በመክፈት ላይ…",

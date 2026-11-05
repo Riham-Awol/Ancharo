@@ -930,3 +930,5 @@ body.home::before {
 .grid > .reveal:nth-child(4) { transition-delay: .36s; }
 .split > .reveal:nth-child(2), .ba-wrap > .reveal:nth-child(2) { transition-delay: .15s; }
 @media (prefers-reduced-motion: reduce) { .reveal { transform: none; transition: none; } }
+
+.signin-help { margin: 0; padding: 12px 14px; border-radius: 10px; background: var(--gold-soft); font-size: .95rem; }

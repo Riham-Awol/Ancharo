@@ -57,6 +57,14 @@
     const phoneOf = (form) => live.normalizePhone(new FormData(form).get("phone"));
 
     /* ---------- sign in / create account ---------- */
+    // "New here? Create your account first" → open sign-up with the same phone number
+    $("[data-new-account]").addEventListener("click", () => {
+      const phone = forms.signin.phone.value;
+      authTab("signup");
+      forms.signup.phone.value = phone;
+      $("[data-signin-help]").hidden = true;
+      forms.signup.full_name.focus();
+    });
     forms.signin.addEventListener("submit", async (e) => {
       e.preventDefault();
       const phone = phoneOf(forms.signin);
@@ -69,6 +77,7 @@
       if (error) {
         if (/not confirmed/i.test(error.message)) return say(authMsg, T("Your account exists but is not activated yet. Please ask a campaign admin to activate it."), "error");
         say(authMsg, /invalid login/i.test(error.message) ? T("Wrong phone number or password.") : error.message, "error");
+        $("[data-signin-help]").hidden = !/invalid login/i.test(error.message);
       }
     });
 
