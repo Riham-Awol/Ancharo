@@ -962,9 +962,9 @@
       say(msg, "Saving…");
       try {
         const row = {
-          first_name: v("first_name"), middle_name: v("middle_name") || null, last_name: v("last_name") || null,
+          first_name: IDC.titleCase(v("first_name")), middle_name: IDC.titleCase(v("middle_name")) || null, last_name: IDC.titleCase(v("last_name")) || null,
           first_name_am: v("first_name_am") || null, middle_name_am: v("middle_name_am") || null, last_name_am: v("last_name_am") || null,
-          full_name: IDC.joinName(v("first_name"), v("middle_name"), v("last_name")),
+          full_name: IDC.titleCase(IDC.joinName(v("first_name"), v("middle_name"), v("last_name"))),
           full_name_am: IDC.joinName(v("first_name_am"), v("middle_name_am"), v("last_name_am")) || null,
           sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
           phone: digits ? live.formatPhone(digits) : v("phone") || null, role: v("role") || "Member",
