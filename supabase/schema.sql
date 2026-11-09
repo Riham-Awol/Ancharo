@@ -717,6 +717,11 @@ create table if not exists public.member_cards (
   created_at         timestamptz not null default now(),
   updated_at         timestamptz
 );
+-- Address printed on the back: city, sub-city, woreda, kebele, house number
+alter table public.member_cards add column if not exists city text check (char_length(city) <= 80);
+alter table public.member_cards add column if not exists subcity text check (char_length(subcity) <= 80);
+alter table public.member_cards add column if not exists woreda text check (char_length(woreda) <= 80);
+alter table public.member_cards add column if not exists house_no text check (char_length(house_no) <= 40);
 create index if not exists member_cards_user_idx on public.member_cards (user_id);
 create unique index if not exists member_cards_one_open_application
   on public.member_cards (user_id) where status = 'pending';

@@ -66,7 +66,7 @@
       <header class="idc__head">
         <span class="idc__logo">${LOGO}</span>
         <span class="idc__org"><strong>REBUILD ANCHARO</strong><span>አንቻሮን እንገንባ</span></span>
-        <span class="idc__title">COMMUNITY MEMBER CARD<span>የማህበረሰብ አባል መታወቂያ</span></span>
+        <span class="idc__title">COMMUNITY MEMBER CARD<span>የአባልነት መታወቂያ</span></span>
       </header>
       <div class="idc__body">
         <div class="idc__photo">${photo(card)}</div>
@@ -76,7 +76,6 @@
           <div class="idc__f"><dt>Role · ሚና</dt><dd>${esc(card.role || "Member")} · ${esc(roleAm)}</dd></div>
           <div class="idc__f"><dt>Sex · ጾታ</dt><dd>${sex ? `${sex[0]} · ${sex[1]}` : "—"}</dd></div>
           <div class="idc__f"><dt>Date of birth · የትውልድ ቀን</dt><dd>${gc(card.date_of_birth)}</dd></div>
-          <div class="idc__f idc__f--wide"><dt>Kebele / Address · ቀበሌ / አድራሻ</dt><dd>${esc(card.kebele || "Ancharo")}</dd></div>
           <div class="idc__f"><dt>Issued · የተሰጠበት</dt><dd>${gc(card.issued_on)}<small>${ec(card.issued_on)}</small></dd></div>
           <div class="idc__f"><dt>Expires · የሚያበቃበት</dt><dd>${gc(card.expires_on)}<small>${ec(card.expires_on)}</small></dd></div>
         </dl>
@@ -88,8 +87,7 @@
       </div>
       <footer class="idc__foot">
         <span class="idc__role-band">${esc((card.role || "Member").toUpperCase())}</span>
-        ${card.fayda_verified ? '<span class="idc__fayda">✓ FAYDA VERIFIED · በፋይዳ የተረጋገጠ</span>' : ""}
-        <span class="idc__notgov">NOT A GOVERNMENT ID · የመንግስት መታወቂያ አይደለም</span>
+        <span class="idc__foot-url">${esc(SITE.replace(/^https?:\/\//, ""))}</span>
       </footer>
       ${STAMP[st] ? `<div class="idc__stamp idc__stamp--${st}">${STAMP[st]}</div>` : ""}
     </div>`;
@@ -104,8 +102,15 @@
       <div class="idc__back">
         <div class="idc__qr idc__qr--big">${qrSvg(verifyUrl(card))}<span>SCAN TO VERIFY<br>ለማረጋገጥ ይቃኙ</span></div>
         <div class="idc__info">
-          <p><strong>This card shows that the holder is a registered member of the Rebuild Ancharo community campaign.</strong> It is not a government ID.</p>
-          <p class="idc__am-p">ይህ ካርድ ያዡ የአንቻሮን እንገንባ የማህበረሰብ ዘመቻ የተመዘገበ አባል መሆኑን ያሳያል። የመንግስት መታወቂያ አይደለም።</p>
+          <p><strong>This card shows that the holder is a registered member of the Rebuild Ancharo community campaign.</strong></p>
+          <p class="idc__am-p">ይህ ካርድ ያዡ የአንቻሮን እንገንባ የማህበረሰብ ዘመቻ የተመዘገበ አባል መሆኑን ያሳያል።</p>
+          <dl class="idc__address">
+            <div><dt>City<br>ከተማ</dt><dd>${esc(card.city || "—")}</dd></div>
+            <div><dt>Sub-city<br>ክፍለ ከተማ</dt><dd>${esc(card.subcity || "—")}</dd></div>
+            <div><dt>Woreda<br>ወረዳ</dt><dd>${esc(card.woreda || "—")}</dd></div>
+            <div><dt>Kebele<br>ቀበሌ</dt><dd>${esc(card.kebele || "—")}</dd></div>
+            <div><dt>House No.<br>የቤት ቁጥር</dt><dd>${esc(card.house_no || "—")}</dd></div>
+          </dl>
           <dl class="idc__extra">
             <div><dt>Blood type · የደም ዓይነት</dt><dd>${esc(card.blood_type || "—")}</dd></div>
             <div><dt>Emergency contact · የአደጋ ጊዜ ተጠሪ</dt><dd>${esc(card.emergency_name || "—")}${card.emergency_phone ? ` · ${esc(card.emergency_phone)}` : ""}</dd></div>
@@ -126,7 +131,7 @@
   // A sample card for the Get involved page and empty previews
   const SAMPLE = {
     sample: true, full_name: "Abebe Kebede", full_name_am: "አበበ ከበደ", card_number: "ANC-26-00001", role: "Volunteer",
-    sex: "M", date_of_birth: "1996-03-14", kebele: "Kebele 01, Ancharo", blood_type: "O+",
+    sex: "M", date_of_birth: "1996-03-14", city: "Ancharo", subcity: "01", woreda: "02", kebele: "03", house_no: "1245", blood_type: "O+",
     emergency_name: "Almaz Kebede", emergency_phone: "+251 91 000 0000", fayda_verified: true,
     issued_on: "2026-11-09", expires_on: "2029-11-08", status: "active",
   };

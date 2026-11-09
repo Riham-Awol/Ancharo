@@ -792,6 +792,7 @@
     const today = () => new Date().toISOString().slice(0, 10);
     const plusYears = (n) => { const d = new Date(); d.setFullYear(d.getFullYear() + n); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); };
     const cardState = (c) => IDC.status(c); // active | pending | revoked | expired
+    const addressOf = (c) => [c.city, c.subcity && "Sub-city " + c.subcity, c.woreda && "Woreda " + c.woreda, c.kebele && "Kebele " + c.kebele, c.house_no && "House " + c.house_no].filter(Boolean).join(", ");
     const STATE = { active: ["Active", "tag--done"], pending: ["Application", "tag--progress"], revoked: ["Revoked", "tag--planned"], expired: ["Expired", "tag--planned"] };
 
     loaders.cards = async () => {
@@ -812,7 +813,7 @@
     function renderCards() {
       const q = $("[data-card-search]").value.trim().toLowerCase();
       const rows = cards.filter((c) => (!cardFilter || c.status === cardFilter) &&
-        (!q || [c.full_name, c.full_name_am, c.card_number, c.phone, c.kebele, c.role].join(" ").toLowerCase().includes(q)));
+        (!q || [c.full_name, c.full_name_am, c.card_number, c.phone, c.city, c.subcity, c.woreda, c.kebele, c.house_no, c.role].join(" ").toLowerCase().includes(q)));
       const box = $("[data-card-list]");
       if (!rows.length) {
         box.innerHTML = `<div class="empty">${cards.length ? "No cards match." : "No cards yet. Click “＋ Register a person” to make the first one."}</div>`;
@@ -825,7 +826,7 @@
             <div class="card-row__mini" style="--idc-w:170px">${IDC.front(c)}</div>
             <div class="grow">
               <div class="admin-row__top"><strong>${esc(c.full_name)}</strong> <span class="tag ${cls}">${label}</span>${c.fayda_verified ? ' <span class="tag tag--done">✓ Fayda</span>' : ""}</div>
-              <div class="muted">${esc(c.card_number)} · ${esc(c.role)}${c.phone ? " · " + esc(c.phone) : ""}${c.kebele ? " · " + esc(c.kebele) : ""}</div>
+              <div class="muted">${esc(c.card_number)} · ${esc(c.role)}${c.phone ? " · " + esc(c.phone) : ""}${addressOf(c) ? " · " + esc(addressOf(c)) : ""}</div>
               <div class="muted">${c.expires_on ? "Valid until " + fmtDate(c.expires_on) + " · " : ""}${c.printed_count ? `Printed ${c.printed_count}× (last ${fmtDate(c.last_printed_at)})` : "Not printed yet"}${c.user_id ? " · linked to an account" : ""}</div>
             </div>
             <div class="admin-row__btns admin-row__btns--wrap">
@@ -892,7 +893,8 @@
       return {
         ...(editing || {}),
         full_name: v("full_name") || "Full name", full_name_am: v("full_name_am"), sex: v("sex"), date_of_birth: v("date_of_birth"),
-        phone: v("phone"), kebele: v("kebele"), role: v("role") || "Member", blood_type: v("blood_type"),
+        phone: v("phone"), city: v("city"), subcity: v("subcity"), woreda: v("woreda"), kebele: v("kebele"), house_no: v("house_no"),
+        role: v("role") || "Member", blood_type: v("blood_type"),
         emergency_name: v("emergency_name"), emergency_phone: v("emergency_phone"),
         fayda_verified: f.get("fayda_verified") === "on", issued_on: v("issued_on"), expires_on: v("expires_on"), status: v("status"),
         photo_url: newPhotoUrl || (editing && editing.photo_url) || "",
@@ -912,7 +914,7 @@
       newPhoto = null; newPhotoUrl = "";
       cardForm.reset();
       const d = c || { role: "Member", status: "active", issued_on: today(), expires_on: plusYears(3) };
-      for (const k of ["id", "full_name", "full_name_am", "sex", "date_of_birth", "phone", "kebele", "role", "blood_type", "emergency_name", "emergency_phone", "fayda_number", "issued_on", "expires_on", "status"])
+      for (const k of ["id", "full_name", "full_name_am", "sex", "date_of_birth", "phone", "city", "subcity", "woreda", "kebele", "house_no", "role", "blood_type", "emergency_name", "emergency_phone", "fayda_number", "issued_on", "expires_on", "status"])
         if (cardForm[k]) cardForm[k].value = d[k] ?? "";
       cardForm.fayda_verified.checked = !!d.fayda_verified;
       $("[data-card-heading]").textContent = c ? `Card ${c.card_number}` : "Register a person";
@@ -956,7 +958,8 @@
       try {
         const row = {
           full_name: v("full_name"), full_name_am: v("full_name_am") || null, sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
-          phone: digits ? live.formatPhone(digits) : v("phone") || null, kebele: v("kebele") || null, role: v("role") || "Member",
+          phone: digits ? live.formatPhone(digits) : v("phone") || null, role: v("role") || "Member",
+          city: v("city") || null, subcity: v("subcity") || null, woreda: v("woreda") || null, kebele: v("kebele") || null, house_no: v("house_no") || null,
           blood_type: v("blood_type") || null, emergency_name: v("emergency_name") || null, emergency_phone: v("emergency_phone") || null,
           fayda_number: fayda || null, fayda_verified: f.get("fayda_verified") === "on", status: v("status") || "active",
           issued_on: v("issued_on") || null, expires_on: v("expires_on") || null,

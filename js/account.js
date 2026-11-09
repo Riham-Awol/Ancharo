@@ -374,7 +374,8 @@
       const f = new FormData(cardForm);
       const v = (k) => String(f.get(k) || "").trim();
       const c = { ...(myApp || {}), status: "pending", full_name: v("full_name") || profile.full_name || "", full_name_am: v("full_name_am"),
-        sex: v("sex"), date_of_birth: v("date_of_birth"), kebele: v("kebele"), blood_type: v("blood_type"), role: "Member",
+        sex: v("sex"), date_of_birth: v("date_of_birth"), city: v("city"), subcity: v("subcity"), woreda: v("woreda"), kebele: v("kebele"),
+        house_no: v("house_no"), blood_type: v("blood_type"), role: "Member",
         emergency_name: v("emergency_name"), emergency_phone: v("emergency_phone"), photo_url: appPhotoUrl || (myApp && myApp.photo_url) || "" };
       $("[data-apply-preview]").innerHTML = `<div style="--idc-w:100%">${IDC.front(c)}</div>`;
       $("[data-apply-photo]").innerHTML = c.photo_url ? `<img src="${esc(c.photo_url)}" alt="" />` : `<span>${esc(T("Your photo"))}</span>`;
@@ -383,7 +384,7 @@
       cardForm.reset();
       appPhoto = null; appPhotoUrl = "";
       const d = app || { full_name: profile.full_name };
-      for (const k of ["full_name", "full_name_am", "sex", "date_of_birth", "kebele", "blood_type", "emergency_name", "emergency_phone", "fayda_number"]) cardForm[k].value = d[k] || "";
+      for (const k of ["full_name", "full_name_am", "sex", "date_of_birth", "city", "subcity", "woreda", "kebele", "house_no", "blood_type", "emergency_name", "emergency_phone", "fayda_number"]) cardForm[k].value = d[k] || "";
       $("[data-apply-submit]").textContent = T(app ? "Save changes" : "Send application");
       $("[data-card-none]").hidden = true;
       $("[data-card-show]").hidden = true;
@@ -416,7 +417,8 @@
       say(cardMsg, T("Sending…"));
       try {
         const row = { full_name: v("full_name"), full_name_am: v("full_name_am") || null, sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
-          kebele: v("kebele") || null, blood_type: v("blood_type") || null, emergency_name: v("emergency_name") || null,
+          city: v("city") || null, subcity: v("subcity") || null, woreda: v("woreda") || null, kebele: v("kebele") || null, house_no: v("house_no") || null,
+          blood_type: v("blood_type") || null, emergency_name: v("emergency_name") || null,
           emergency_phone: v("emergency_phone") || null, fayda_number: fayda || null, phone: live.formatPhone(profile.phone) || null };
         if (appPhoto) {
           const path = `${user.id}/${live.randomId()}.jpg`;

@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;600;700&family=Noto+Serif+Ethiopic:wght@600;700&display=swap" rel="stylesheet" />
   <script src="js/i18n.js?v=f42a2118"></script>
-  <link rel="stylesheet" href="css/styles.css?v=0d34a372" />
+  <link rel="stylesheet" href="css/styles.css?v=fdcb69d4" />
 </head>
 <body>
 
@@ -213,10 +213,19 @@
                     <label>Sex<select name="sex"><option value="">—</option><option value="M">Male · ወንድ</option><option value="F">Female · ሴት</option></select></label>
                     <label>Date of birth<input type="date" name="date_of_birth" /></label>
                   </div>
-                  <div class="form-row">
-                    <label>Kebele / address<input name="kebele" maxlength="120" placeholder="e.g. Kebele 01, Ancharo" /></label>
-                    <label>Blood type <span class="opt">(optional)</span><select name="blood_type"><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></label>
-                  </div>
+                  <fieldset class="address-box">
+                    <legend>Address <span class="opt">(printed on the back)</span></legend>
+                    <div class="form-row">
+                      <label>City<input name="city" maxlength="80" placeholder="e.g. Ancharo" /></label>
+                      <label>Sub-city<input name="subcity" maxlength="80" /></label>
+                    </div>
+                    <div class="form-row form-row--3">
+                      <label>Woreda<input name="woreda" maxlength="80" /></label>
+                      <label>Kebele<input name="kebele" maxlength="120" /></label>
+                      <label>House No.<input name="house_no" maxlength="40" /></label>
+                    </div>
+                  </fieldset>
+                  <label>Blood type <span class="opt">(optional)</span><select name="blood_type"><option value="">—</option><option>A+</option><option>A-</option><option>B+</option><option>B-</option><option>AB+</option><option>AB-</option><option>O+</option><option>O-</option></select></label>
                   <div class="form-row">
                     <label>Emergency contact<input name="emergency_name" maxlength="120" /></label>
                     <label>Their phone<input type="tel" name="emergency_phone" maxlength="40" /></label>
@@ -311,9 +320,9 @@
 
   <script src="js/config.js?v=c62fa761"></script>
   <script src="js/vendor/qrcode.js?v=fbb6b69b"></script>
-  <script src="js/idcard.js?v=416c459e"></script>
+  <script src="js/idcard.js?v=cb18c88e"></script>
   <script src="js/main.js?v=243c6608"></script>
   <script src="js/live.js?v=4247fa48"></script>
-  <script src="js/account.js?v=cb450e2d"></script>
+  <script src="js/account.js?v=8a2fcd21"></script>
 </body>
 </html>
