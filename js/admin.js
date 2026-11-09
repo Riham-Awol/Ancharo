@@ -107,6 +107,7 @@
       ]);
       const newPledges = (pledges.data || []).filter((x) => x.status === "pending").length;
       const newVols = (vols.data || []).filter((x) => x.status === "new").length;
+      sb.from("member_cards").select("id").eq("status", "pending").then(({ data }) => setCount("[data-card-badge]", (data || []).length));
       setCount("[data-pledge-badge]", newPledges);
       setCount("[data-volunteer-badge]", newVols);
       const s = stats.data || {};
@@ -483,6 +484,9 @@
       f.deadline.value = data.deadline || "";
       f.offline_raised.value = Number(data.offline_raised);
       f.offline_donors.value = data.offline_donors;
+      f.card_phone.value = data.card_phone || "";
+      f.card_issuer.value = data.card_issuer || "";
+      cardOpts = { phone: data.card_phone || "", issuer: data.card_issuer || "" };
     }
     loaders.settings = loadSettings;
     forms.settings.addEventListener("submit", async (e) => {
@@ -497,6 +501,8 @@
           deadline: f.get("deadline") || null,
           offline_raised: Number(f.get("offline_raised")),
           offline_donors: Number(f.get("offline_donors")),
+          card_phone: f.get("card_phone").trim() || null,
+          card_issuer: f.get("card_issuer").trim() || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", 1);
@@ -775,6 +781,255 @@
       a.href = URL.createObjectURL(new Blob(["﻿" + csv], { type: "text/csv" }));
       a.download = `ancharo-volunteers-${new Date().toISOString().slice(0, 10)}.csv`;
       a.click();
+    });
+
+    /* ======================= MEMBER CARDS (digital ID) ======================= */
+    let cardOpts = { phone: "", issuer: "" };
+    let cards = [];
+    let cardFilter = "";
+    const selected = new Set();
+    const IDC = window.IDCard;
+    const today = () => new Date().toISOString().slice(0, 10);
+    const plusYears = (n) => { const d = new Date(); d.setFullYear(d.getFullYear() + n); d.setDate(d.getDate() - 1); return d.toISOString().slice(0, 10); };
+    const cardState = (c) => IDC.status(c); // active | pending | revoked | expired
+    const STATE = { active: ["Active", "tag--done"], pending: ["Application", "tag--progress"], revoked: ["Revoked", "tag--planned"], expired: ["Expired", "tag--planned"] };
+
+    loaders.cards = async () => {
+      const { data, error } = await sb.from("member_cards").select("*").order("created_at", { ascending: false });
+      const box = $("[data-card-list]");
+      if (error) return (box.innerHTML = `<p class="form-msg form-msg--error">${esc(error.message)}</p>`);
+      cards = data || [];
+      setCount("[data-card-badge]", cards.filter((c) => c.status === "pending").length);
+      renderCards();
+    };
+    $$("[data-card-status]").forEach((b) => b.addEventListener("click", () => {
+      $$("[data-card-status]").forEach((x) => x.classList.toggle("is-active", x === b));
+      cardFilter = b.dataset.cardStatus;
+      renderCards();
+    }));
+    $("[data-card-search]").addEventListener("input", () => renderCards());
+
+    function renderCards() {
+      const q = $("[data-card-search]").value.trim().toLowerCase();
+      const rows = cards.filter((c) => (!cardFilter || c.status === cardFilter) &&
+        (!q || [c.full_name, c.full_name_am, c.card_number, c.phone, c.kebele, c.role].join(" ").toLowerCase().includes(q)));
+      const box = $("[data-card-list]");
+      if (!rows.length) {
+        box.innerHTML = `<div class="empty">${cards.length ? "No cards match." : "No cards yet. Click “＋ Register a person” to make the first one."}</div>`;
+      } else {
+        box.innerHTML = rows.map((c) => {
+          const st = cardState(c);
+          const [label, cls] = STATE[st];
+          return `<article class="card-row" data-id="${c.id}">
+            <label class="card-row__pick"><input type="checkbox" data-select ${selected.has(String(c.id)) ? "checked" : ""} aria-label="Select for printing" /></label>
+            <div class="card-row__mini" style="--idc-w:170px">${IDC.front(c)}</div>
+            <div class="grow">
+              <div class="admin-row__top"><strong>${esc(c.full_name)}</strong> <span class="tag ${cls}">${label}</span>${c.fayda_verified ? ' <span class="tag tag--done">✓ Fayda</span>' : ""}</div>
+              <div class="muted">${esc(c.card_number)} · ${esc(c.role)}${c.phone ? " · " + esc(c.phone) : ""}${c.kebele ? " · " + esc(c.kebele) : ""}</div>
+              <div class="muted">${c.expires_on ? "Valid until " + fmtDate(c.expires_on) + " · " : ""}${c.printed_count ? `Printed ${c.printed_count}× (last ${fmtDate(c.last_printed_at)})` : "Not printed yet"}${c.user_id ? " · linked to an account" : ""}</div>
+            </div>
+            <div class="admin-row__btns admin-row__btns--wrap">
+              ${c.status === "pending" ? '<button class="btn btn--green btn--small" type="button" data-act="approve">✓ Approve</button>' : ""}
+              <button class="link-btn" type="button" data-act="edit">Edit</button>
+              <button class="link-btn" type="button" data-act="print">🖨 Print</button>
+              ${c.status === "revoked" ? '<button class="link-btn" type="button" data-act="reactivate">Reactivate</button>' : c.status === "active" ? '<button class="link-btn link-btn--danger" type="button" data-act="revoke">Revoke</button>' : ""}
+              <button class="link-btn link-btn--danger" type="button" data-act="delete">Delete</button>
+            </div>
+          </article>`;
+        }).join("");
+      }
+      $("[data-card-print-selected]").disabled = !selected.size;
+      $("[data-card-print-selected]").textContent = selected.size ? `🖨 Print selected (${selected.size})` : "🖨 Print selected";
+    }
+
+    $("[data-card-list]").addEventListener("change", (e) => {
+      const cb = e.target.closest("[data-select]");
+      if (!cb) return;
+      const id = cb.closest("[data-id]").dataset.id;
+      cb.checked ? selected.add(id) : selected.delete(id);
+      renderCards();
+    });
+    const idPhotoPath = (url) => { const m = String(url || "").match(/\/object\/public\/id-photos\/(.+)$/); return m ? decodeURIComponent(m[1]) : null; };
+
+    $("[data-card-list]").addEventListener("click", async (e) => {
+      const btn = e.target.closest("[data-act]");
+      if (!btn) return;
+      const c = cards.find((x) => String(x.id) === btn.closest("[data-id]").dataset.id);
+      const act = btn.dataset.act;
+      if (act === "edit") return openEditor(c);
+      if (act === "print") return askPrint([c]);
+      if (act === "delete") {
+        if (!confirm(T("Delete the card of {name}? This cannot be undone. Its QR code will stop working.", { name: c.full_name }))) return;
+        const { error } = await sb.from("member_cards").delete().eq("id", c.id);
+        if (error) return toast(error.message);
+        const p = idPhotoPath(c.photo_url);
+        if (p) await sb.storage.from("id-photos").remove([p]);
+        selected.delete(String(c.id));
+        toast("Deleted");
+        return loaders.cards();
+      }
+      const upd = act === "approve" ? { status: "active", issued_on: c.issued_on || today(), expires_on: c.expires_on || plusYears(3) }
+        : act === "revoke" ? { status: "revoked" } : { status: "active" };
+      if (act === "revoke" && !confirm(T("Revoke the card of {name}? Scanning it will show “revoked”.", { name: c.full_name }))) return;
+      const { error } = await sb.from("member_cards").update(upd).eq("id", c.id);
+      if (error) return toast(error.message);
+      toast(act === "approve" ? "Approved ✓ Ready to print" : act === "revoke" ? "Card revoked" : "Card active again");
+      loaders.cards();
+    });
+
+    /* ---------- editor ---------- */
+    const cardModal = $("[data-card-modal]");
+    const cardForm = forms.card;
+    let editing = null, newPhoto = null, newPhotoUrl = "", stream = null;
+    const stopCamera = () => { stream && stream.getTracks().forEach((t) => t.stop()); stream = null; $("[data-camera-box]").hidden = true; };
+    const closeEditor = () => { stopCamera(); cardModal.hidden = true; };
+    $("[data-card-close]").addEventListener("click", closeEditor);
+    cardModal.addEventListener("click", (e) => e.target === cardModal && closeEditor());
+
+    const formCard = () => {
+      const f = new FormData(cardForm);
+      const v = (k) => String(f.get(k) || "").trim();
+      return {
+        ...(editing || {}),
+        full_name: v("full_name") || "Full name", full_name_am: v("full_name_am"), sex: v("sex"), date_of_birth: v("date_of_birth"),
+        phone: v("phone"), kebele: v("kebele"), role: v("role") || "Member", blood_type: v("blood_type"),
+        emergency_name: v("emergency_name"), emergency_phone: v("emergency_phone"),
+        fayda_verified: f.get("fayda_verified") === "on", issued_on: v("issued_on"), expires_on: v("expires_on"), status: v("status"),
+        photo_url: newPhotoUrl || (editing && editing.photo_url) || "",
+        card_number: (editing && editing.card_number) || "ANC-··-·····", verify_code: (editing && editing.verify_code) || "preview-only",
+      };
+    };
+    const preview = () => {
+      const c = formCard();
+      $("[data-card-preview]").innerHTML = `<div style="--idc-w:100%">${IDC.front(c)}</div><div style="--idc-w:100%">${IDC.back(c, cardOpts)}</div>`;
+      $("[data-photo-preview]").innerHTML = c.photo_url ? `<img src="${esc(c.photo_url)}" alt="" />` : '<span>No photo yet</span>';
+    };
+    cardForm.addEventListener("input", preview);
+    cardForm.addEventListener("change", preview);
+
+    function openEditor(c) {
+      editing = c || null;
+      newPhoto = null; newPhotoUrl = "";
+      cardForm.reset();
+      const d = c || { role: "Member", status: "active", issued_on: today(), expires_on: plusYears(3) };
+      for (const k of ["id", "full_name", "full_name_am", "sex", "date_of_birth", "phone", "kebele", "role", "blood_type", "emergency_name", "emergency_phone", "fayda_number", "issued_on", "expires_on", "status"])
+        if (cardForm[k]) cardForm[k].value = d[k] ?? "";
+      cardForm.fayda_verified.checked = !!d.fayda_verified;
+      $("[data-card-heading]").textContent = c ? `Card ${c.card_number}` : "Register a person";
+      say($("[data-card-msg]"), "");
+      preview();
+      cardModal.hidden = false;
+      cardForm.full_name.focus();
+    }
+    $("[data-card-new]").addEventListener("click", () => openEditor(null));
+
+    const usePhoto = async (src) => {
+      newPhoto = await live.cropPortrait(src);
+      if (newPhotoUrl) URL.revokeObjectURL(newPhotoUrl);
+      newPhotoUrl = URL.createObjectURL(newPhoto);
+      preview();
+    };
+    cardForm.photo.addEventListener("change", () => cardForm.photo.files[0] && usePhoto(cardForm.photo.files[0]));
+    $("[data-camera]").addEventListener("click", async () => {
+      try {
+        stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 1280 } }, audio: false });
+        const video = $("[data-camera-box] video");
+        video.srcObject = stream;
+        $("[data-camera-box]").hidden = false;
+      } catch (err) {
+        toast(T("Camera not available. Use “Choose photo” instead."));
+      }
+    });
+    $("[data-camera-stop]").addEventListener("click", stopCamera);
+    $("[data-snap]").addEventListener("click", async () => { await usePhoto($("[data-camera-box] video")); stopCamera(); });
+
+    async function saveCard() {
+      const f = new FormData(cardForm);
+      const v = (k) => String(f.get(k) || "").trim();
+      const msg = $("[data-card-msg]");
+      if (!v("full_name")) return say(msg, T("Please enter the full name."), "error"), null;
+      const fayda = v("fayda_number").replace(/\D/g, "");
+      if (fayda && fayda.length !== 12 && fayda.length !== 16) return say(msg, T("A Fayda number has 12 or 16 digits."), "error"), null;
+      const digits = live.normalizePhone(v("phone"));
+      busy(cardForm, true);
+      say(msg, "Saving…");
+      try {
+        const row = {
+          full_name: v("full_name"), full_name_am: v("full_name_am") || null, sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
+          phone: digits ? live.formatPhone(digits) : v("phone") || null, kebele: v("kebele") || null, role: v("role") || "Member",
+          blood_type: v("blood_type") || null, emergency_name: v("emergency_name") || null, emergency_phone: v("emergency_phone") || null,
+          fayda_number: fayda || null, fayda_verified: f.get("fayda_verified") === "on", status: v("status") || "active",
+          issued_on: v("issued_on") || null, expires_on: v("expires_on") || null,
+        };
+        if (row.status === "active") { row.issued_on ||= today(); row.expires_on ||= plusYears(3); }
+        if (newPhoto) {
+          const path = `cards/${live.randomId()}.jpg`;
+          const up = await sb.storage.from("id-photos").upload(path, newPhoto, { contentType: "image/jpeg", cacheControl: "31536000" });
+          if (up.error) throw up.error;
+          row.photo_url = sb.storage.from("id-photos").getPublicUrl(path).data.publicUrl;
+          const old = editing && idPhotoPath(editing.photo_url);
+          if (old) await sb.storage.from("id-photos").remove([old]);
+        }
+        // link to the person's website account when the phone number matches one
+        if (digits && !(editing && editing.user_id)) {
+          const { data: prof } = await sb.from("profiles").select("id").eq("phone", digits).maybeSingle();
+          if (prof) row.user_id = prof.id;
+        }
+        const res = editing
+          ? await sb.from("member_cards").update(row).eq("id", editing.id).select()
+          : await sb.from("member_cards").insert(row).select();
+        if (res.error) throw res.error;
+        const saved = (res.data && res.data[0]) || { ...editing, ...row };
+        toast(editing ? "Saved ✓" : T("Card {number} created ✓", { number: saved.card_number || "" }));
+        closeEditor();
+        loaders.cards();
+        return saved;
+      } catch (err) {
+        say(msg, err.message, "error");
+        return null;
+      } finally {
+        busy(cardForm, false);
+      }
+    }
+    cardForm.addEventListener("submit", (e) => { e.preventDefault(); saveCard(); });
+    $("[data-save-print]").addEventListener("click", async () => { const c = await saveCard(); if (c) askPrint([c]); });
+
+    /* ---------- printing ---------- */
+    const printModal = $("[data-print-modal]");
+    let toPrint = [];
+    const printArea = $("#print-area");
+    document.body.appendChild(printArea); // must sit directly in <body> for printing
+    $("[data-print-close]").addEventListener("click", () => (printModal.hidden = true));
+    function askPrint(list) {
+      toPrint = list;
+      $("[data-print-count]").textContent = list.length === 1 ? list[0].full_name : T("{n} cards", { n: list.length });
+      printModal.hidden = false;
+    }
+    $("[data-card-print-selected]").addEventListener("click", () => askPrint(cards.filter((c) => selected.has(String(c.id)))));
+    forms.print.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const layout = forms.print.layout.value;
+      const withBack = forms.print.back.checked;
+      printModal.hidden = true;
+      printArea.className = "print-" + layout;
+      printArea.innerHTML = toPrint.map((c) =>
+        layout === "a4"
+          ? `<div class="print-row">${IDC.front(c)}${withBack ? IDC.back(c, cardOpts) : ""}</div>`
+          : IDC.front(c) + (withBack ? IDC.back(c, cardOpts) : "")
+      ).join("");
+      let pageCss = document.getElementById("print-page-size");
+      if (!pageCss) { pageCss = document.createElement("style"); pageCss.id = "print-page-size"; document.head.appendChild(pageCss); }
+      pageCss.textContent = layout === "a4" ? "@page { size: A4; margin: 10mm; }" : "@page { size: 85.6mm 54mm; margin: 0; }";
+      await Promise.all([...printArea.querySelectorAll("img")].map((img) => (img.complete ? 0 : new Promise((r) => (img.onload = img.onerror = r)))));
+      document.body.classList.add("printing");
+      const done = async () => {
+        document.body.classList.remove("printing");
+        window.removeEventListener("afterprint", done);
+        await sb.rpc("mark_cards_printed", { ids: toPrint.map((c) => c.id).filter(Boolean) });
+        loaders.cards();
+      };
+      window.addEventListener("afterprint", done);
+      window.print();
     });
   });
 })();

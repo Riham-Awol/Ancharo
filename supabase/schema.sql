@@ -680,6 +680,133 @@ begin
 end $$;
 revoke all on function public.make_admin(text) from public, anon, authenticated;
 
+-- --------------------------------------------------------------------------
+-- 15. COMMUNITY MEMBER CARDS (digital ID, printed and handed out in person)
+--     This is a campaign membership card, NOT a government ID.
+-- --------------------------------------------------------------------------
+alter table public.settings add column if not exists card_phone text check (char_length(card_phone) <= 40);
+alter table public.settings add column if not exists card_issuer text check (char_length(card_issuer) <= 80);
+
+create sequence if not exists public.member_card_seq start 1;
+
+create table if not exists public.member_cards (
+  id                 bigint generated always as identity primary key,
+  card_number        text not null unique
+                     default 'ANC-' || to_char(now(), 'YY') || '-' || lpad(nextval('public.member_card_seq')::text, 5, '0'),
+  verify_code        text not null unique default substr(replace(gen_random_uuid()::text, '-', ''), 1, 16),
+  user_id            uuid references public.profiles (id) on delete set null,
+  full_name          text not null check (char_length(full_name) between 1 and 120),
+  full_name_am       text check (char_length(full_name_am) <= 120),
+  sex                text check (sex in ('M', 'F')),
+  date_of_birth      date,
+  phone              text check (char_length(phone) <= 40),
+  kebele             text check (char_length(kebele) <= 120),
+  role               text not null default 'Member' check (char_length(role) <= 40),
+  blood_type         text check (blood_type in ('A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-')),
+  emergency_name     text check (char_length(emergency_name) <= 120),
+  emergency_phone    text check (char_length(emergency_phone) <= 40),
+  fayda_number       text check (fayda_number ~ '^[0-9]{12}$|^[0-9]{16}$'),
+  fayda_verified     boolean not null default false,
+  photo_url          text check (char_length(photo_url) <= 500),
+  status             text not null default 'pending' check (status in ('pending', 'active', 'revoked')),
+  issued_on          date,
+  expires_on         date,
+  printed_count      int not null default 0,
+  last_printed_at    timestamptz,
+  created_by         uuid default auth.uid() references public.profiles (id) on delete set null,
+  created_at         timestamptz not null default now(),
+  updated_at         timestamptz
+);
+create index if not exists member_cards_user_idx on public.member_cards (user_id);
+create unique index if not exists member_cards_one_open_application
+  on public.member_cards (user_id) where status = 'pending';
+
+-- Only admins can activate, revoke, date, or mark Fayda as checked.
+create or replace function public.protect_member_card()
+returns trigger language plpgsql security definer set search_path = public as $$
+begin
+  if auth.uid() is not null and not public.is_admin() then
+    if tg_op = 'INSERT' then
+      new.status := 'pending'; new.fayda_verified := false; new.issued_on := null; new.expires_on := null;
+      new.printed_count := 0; new.last_printed_at := null; new.role := 'Member';
+      new.card_number := 'ANC-' || to_char(now(), 'YY') || '-' || lpad(nextval('public.member_card_seq')::text, 5, '0');
+      new.verify_code := substr(replace(gen_random_uuid()::text, '-', ''), 1, 16);
+    else
+      if old.status <> 'pending' then raise exception 'This card can only be changed by an admin'; end if;
+      new.status := old.status; new.fayda_verified := old.fayda_verified; new.issued_on := old.issued_on;
+      new.expires_on := old.expires_on; new.printed_count := old.printed_count; new.role := old.role;
+      new.card_number := old.card_number; new.verify_code := old.verify_code; new.user_id := old.user_id;
+    end if;
+  end if;
+  if tg_op = 'UPDATE' then new.updated_at := now(); end if;
+  -- the Fayda tick is cleared when the number changes
+  if tg_op = 'UPDATE' and new.fayda_number is distinct from old.fayda_number and not public.is_admin() then
+    new.fayda_verified := false;
+  end if;
+  return new;
+end $$;
+drop trigger if exists protect_member_card on public.member_cards;
+create trigger protect_member_card before insert or update on public.member_cards
+  for each row execute function public.protect_member_card();
+
+alter table public.member_cards enable row level security;
+drop policy if exists "cards: read own or admin" on public.member_cards;
+create policy "cards: read own or admin" on public.member_cards
+  for select to authenticated using (user_id = auth.uid() or public.is_admin());
+drop policy if exists "cards: apply for own or admin" on public.member_cards;
+create policy "cards: apply for own or admin" on public.member_cards
+  for insert to authenticated with check (user_id = auth.uid() or public.is_admin());
+drop policy if exists "cards: edit own application or admin" on public.member_cards;
+create policy "cards: edit own application or admin" on public.member_cards
+  for update to authenticated
+  using ((user_id = auth.uid() and status = 'pending') or public.is_admin())
+  with check (user_id = auth.uid() or public.is_admin());
+drop policy if exists "cards: withdraw own application or admin" on public.member_cards;
+create policy "cards: withdraw own application or admin" on public.member_cards
+  for delete to authenticated using ((user_id = auth.uid() and status = 'pending') or public.is_admin());
+
+-- What the QR code shows to anyone who scans it: who the card belongs to and whether it is valid.
+-- Never shows phone numbers, Fayda numbers, birth dates or emergency contacts.
+create or replace function public.verify_card(code text)
+returns json language sql stable security definer set search_path = public as $$
+  select json_build_object(
+    'card_number', c.card_number, 'full_name', c.full_name, 'full_name_am', c.full_name_am,
+    'role', c.role, 'photo_url', c.photo_url, 'issued_on', c.issued_on, 'expires_on', c.expires_on,
+    'fayda_verified', c.fayda_verified,
+    'status', case when c.status = 'revoked' then 'revoked'
+                   when c.status = 'pending' then 'pending'
+                   when c.expires_on is not null and c.expires_on < current_date then 'expired'
+                   else 'valid' end)
+  from public.member_cards c
+  where c.verify_code = code and length(code) >= 12;
+$$;
+grant execute on function public.verify_card(text) to anon, authenticated;
+
+-- Admin: count a print
+create or replace function public.mark_cards_printed(ids bigint[])
+returns void language plpgsql security definer set search_path = public as $$
+begin
+  if not public.is_admin() then raise exception 'Admins only'; end if;
+  update public.member_cards set printed_count = printed_count + 1, last_printed_at = now() where id = any(ids);
+end $$;
+revoke all on function public.mark_cards_printed(bigint[]) from anon;
+grant execute on function public.mark_cards_printed(bigint[]) to authenticated;
+
+-- Card photos: random file names; anyone with the link can view (needed for the scan page),
+-- nobody can list them; members upload into their own folder, admins anywhere.
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('id-photos', 'id-photos', true, 5242880, array['image/png', 'image/jpeg', 'image/webp'])
+on conflict (id) do update set public = excluded.public, file_size_limit = excluded.file_size_limit,
+  allowed_mime_types = excluded.allowed_mime_types;
+drop policy if exists "id-photos: upload own or admin" on storage.objects;
+create policy "id-photos: upload own or admin" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'id-photos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+drop policy if exists "id-photos: delete own or admin" on storage.objects;
+create policy "id-photos: delete own or admin" on storage.objects
+  for delete to authenticated
+  using (bucket_id = 'id-photos' and ((storage.foldername(name))[1] = auth.uid()::text or public.is_admin()));
+
 -- ==========================================================================
 --  MAKE YOURSELF ADMIN (after creating your account on the website)
 --  Put your phone number in, select just this line and press Run:

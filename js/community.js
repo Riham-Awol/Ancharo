@@ -12,6 +12,16 @@
     el.className = "form-msg" + (kind ? " form-msg--" + kind : "");
   };
 
+  // Sample member card (works with or without Supabase)
+  const sample = document.querySelector("[data-sample-card]");
+  if (sample && window.IDCard) {
+    const c = { ...IDCard.SAMPLE, photo_url: (live && live.pageHref && live.pageHref("index").startsWith("/") ? "/" : "") + "images/sample-member.jpg" };
+    sample.querySelector(".idc-flip__inner").innerHTML = IDCard.front(c) + IDCard.back(c, { phone: "+251 00 000 0000" });
+    const flip = () => sample.classList.toggle("is-flipped");
+    sample.addEventListener("click", flip);
+    sample.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip()));
+  }
+
   if (!live || !live.enabled) {
     $("[data-proposals]").innerHTML = `<div class="empty">${esc(T("Voting will open here soon."))}</div>`;
     $("[data-projects]").innerHTML = `<div class="empty">${esc(T("Projects will be open for adoption here soon."))}</div>`;
@@ -37,7 +47,7 @@
         sb.rpc("proposal_results"),
         session ? sb.from("votes").select("proposal_id,choice").eq("user_id", session.user.id) : Promise.resolve({ data: [] }),
       ]);
-      if (pr.error) return (box.innerHTML = `<p class="form-msg form-msg--error">${esc(pr.error.message)}</p>`);
+      if (pr.error) { console.warn(pr.error); return (box.innerHTML = `<div class="empty">${esc(T("Couldn't load right now. Please try again later."))}</div>`); }
       const counts = {};
       (res.data || []).forEach((r) => ((counts[r.proposal_id] ||= {})[r.choice] = Number(r.votes)));
       const my = {};
@@ -154,7 +164,7 @@
     let projects = [];
     async function loadProjects() {
       const grid = $("[data-projects]");
-      try { projects = await live.loadProjects(sb); } catch (err) { grid.innerHTML = `<p class="form-msg form-msg--error">${esc(err.message)}</p>`; return; }
+      try { projects = await live.loadProjects(sb); } catch (err) { console.warn(err); grid.innerHTML = `<div class="empty">${esc(T("Couldn't load right now. Please try again later."))}</div>`; return; }
       grid.innerHTML = projects.length
         ? projects.map((p) => live.projectCard(p, { adopt: true })).join("")
         : `<div class="empty">${esc(T("Projects will be open for adoption here soon."))}</div>`;

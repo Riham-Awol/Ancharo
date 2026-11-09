@@ -127,6 +127,7 @@
       loadProjectsSelect();
       loadMine();
       loadActivity();
+      loadCard();
       if (location.hash === "#submit") $("#submit").scrollIntoView();
       if (location.hash === "#password") { $("#password").open = true; $("#password").scrollIntoView(); }
     }
@@ -317,6 +318,130 @@
         loadMine();
       }
       if (btn.dataset.act === "cert") certificate(d);
+    });
+
+    /* ======================= MY MEMBER CARD ======================= */
+    const IDC = window.IDCard;
+    const cardForm = forms.cardapply;
+    let myCard = null, myApp = null, appPhoto = null, appPhotoUrl = "", cardOpts = {};
+    const cardMsg = $("[data-cardapply-msg]");
+    const STATE = { active: ["Active", "tag--done"], pending: ["Waiting for approval", "tag--progress"], revoked: ["Revoked", "tag--planned"], expired: ["Expired", "tag--planned"] };
+
+    async function loadCard() {
+      if (!IDC) return;
+      const [cardsRes, setRes] = await Promise.all([
+        sb.from("member_cards").select("*").eq("user_id", user.id).order("created_at", { ascending: false }),
+        sb.from("settings").select("card_phone,card_issuer").eq("id", 1).maybeSingle(),
+      ]);
+      cardOpts = { phone: (setRes.data && setRes.data.card_phone) || "", issuer: (setRes.data && setRes.data.card_issuer) || "" };
+      const list = cardsRes.data || [];
+      myApp = list.find((c) => c.status === "pending") || null;
+      myCard = list.find((c) => c.status !== "pending") || null;
+      const shown = myCard || myApp;
+      cardForm.hidden = true;
+      $("[data-card-none]").hidden = !!shown;
+      $("[data-card-show]").hidden = !shown;
+      const tag = $("[data-card-state]");
+      tag.hidden = !shown;
+      if (!shown) return;
+      const st = IDC.status(shown);
+      tag.textContent = STATE[st][0];
+      tag.className = "tag " + STATE[st][1];
+      $("[data-card-faces]").innerHTML = IDC.front(shown) + IDC.back(shown, cardOpts);
+      $("[data-card-flip]").classList.remove("is-flipped");
+      $("[data-card-edit]").hidden = $("[data-card-withdraw]").hidden = !(shown === myApp);
+      $("[data-card-note]").textContent = shown === myApp
+        ? T("Your application is waiting for approval. When it's approved, the campaign team will print your card.")
+        : T("Tap the card to turn it over. Show it at community events, or let someone scan the QR code.");
+    }
+
+    const flip = (el) => el.classList.toggle("is-flipped");
+    $("[data-card-flip]").addEventListener("click", (e) => flip(e.currentTarget));
+    $("[data-card-flip]").addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip(e.currentTarget)));
+    const full = $("[data-card-fullscreen]");
+    $("[data-card-full]").addEventListener("click", () => {
+      const c = myCard || myApp;
+      full.querySelector(".idc-flip__inner").innerHTML = IDC.front(c) + IDC.back(c, cardOpts);
+      full.querySelector(".idc-flip").classList.remove("is-flipped");
+      full.hidden = false;
+    });
+    $("[data-card-flip-full]").addEventListener("click", (e) => flip(e.currentTarget));
+    $("[data-card-full-close]").addEventListener("click", () => (full.hidden = true));
+    document.addEventListener("keydown", (e) => e.key === "Escape" && (full.hidden = true));
+
+    // apply / edit application
+    const applyPreview = () => {
+      const f = new FormData(cardForm);
+      const v = (k) => String(f.get(k) || "").trim();
+      const c = { ...(myApp || {}), status: "pending", full_name: v("full_name") || profile.full_name || "", full_name_am: v("full_name_am"),
+        sex: v("sex"), date_of_birth: v("date_of_birth"), kebele: v("kebele"), blood_type: v("blood_type"), role: "Member",
+        emergency_name: v("emergency_name"), emergency_phone: v("emergency_phone"), photo_url: appPhotoUrl || (myApp && myApp.photo_url) || "" };
+      $("[data-apply-preview]").innerHTML = `<div style="--idc-w:100%">${IDC.front(c)}</div>`;
+      $("[data-apply-photo]").innerHTML = c.photo_url ? `<img src="${esc(c.photo_url)}" alt="" />` : `<span>${esc(T("Your photo"))}</span>`;
+    };
+    const openApply = (app) => {
+      cardForm.reset();
+      appPhoto = null; appPhotoUrl = "";
+      const d = app || { full_name: profile.full_name };
+      for (const k of ["full_name", "full_name_am", "sex", "date_of_birth", "kebele", "blood_type", "emergency_name", "emergency_phone", "fayda_number"]) cardForm[k].value = d[k] || "";
+      $("[data-apply-submit]").textContent = T(app ? "Save changes" : "Send application");
+      $("[data-card-none]").hidden = true;
+      $("[data-card-show]").hidden = true;
+      cardForm.hidden = false;
+      say(cardMsg, "");
+      applyPreview();
+      cardForm.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+    $("[data-card-apply]").addEventListener("click", () => openApply(null));
+    $("[data-card-edit]").addEventListener("click", () => openApply(myApp));
+    $("[data-apply-cancel]").addEventListener("click", () => { say(cardMsg, ""); loadCard(); });
+    cardForm.addEventListener("input", applyPreview);
+    cardForm.addEventListener("change", applyPreview);
+    cardForm.photo.addEventListener("change", async () => {
+      if (!cardForm.photo.files[0]) return;
+      appPhoto = await live.cropPortrait(cardForm.photo.files[0]);
+      if (appPhotoUrl) URL.revokeObjectURL(appPhotoUrl);
+      appPhotoUrl = URL.createObjectURL(appPhoto);
+      applyPreview();
+    });
+    cardForm.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const f = new FormData(cardForm);
+      const v = (k) => String(f.get(k) || "").trim();
+      if (!v("full_name")) return say(cardMsg, T("Please enter the full name."), "error");
+      if (!appPhoto && !(myApp && myApp.photo_url)) return say(cardMsg, T("Please add a photo of your face."), "error");
+      const fayda = v("fayda_number").replace(/\D/g, "");
+      if (fayda && fayda.length !== 12 && fayda.length !== 16) return say(cardMsg, T("A Fayda number has 12 or 16 digits."), "error");
+      busy(cardForm, true);
+      say(cardMsg, T("Sending…"));
+      try {
+        const row = { full_name: v("full_name"), full_name_am: v("full_name_am") || null, sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
+          kebele: v("kebele") || null, blood_type: v("blood_type") || null, emergency_name: v("emergency_name") || null,
+          emergency_phone: v("emergency_phone") || null, fayda_number: fayda || null, phone: live.formatPhone(profile.phone) || null };
+        if (appPhoto) {
+          const path = `${user.id}/${live.randomId()}.jpg`;
+          const up = await sb.storage.from("id-photos").upload(path, appPhoto, { contentType: "image/jpeg" });
+          if (up.error) throw up.error;
+          row.photo_url = sb.storage.from("id-photos").getPublicUrl(path).data.publicUrl;
+        }
+        const res = myApp
+          ? await sb.from("member_cards").update(row).eq("id", myApp.id)
+          : await sb.from("member_cards").insert({ ...row, user_id: user.id });
+        if (res.error) throw res.error;
+        await loadCard();
+        say(cardMsg, T("Thank you! 🎉 Your application was sent. The campaign team will check it and print your card."), "ok");
+      } catch (err) {
+        say(cardMsg, err.message, "error");
+      } finally {
+        busy(cardForm, false);
+      }
+    });
+    $("[data-card-withdraw]").addEventListener("click", async () => {
+      if (!myApp || !confirm(T("Withdraw your card application?"))) return;
+      const { error } = await sb.from("member_cards").delete().eq("id", myApp.id);
+      if (error) return toast(error.message);
+      toast(T("Application withdrawn"));
+      loadCard();
     });
 
     /* thank-you certificate (PNG download) */

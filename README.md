@@ -65,6 +65,28 @@ Once connected:
 - The **progress bar** and **supporters wall** update automatically from approved donations.
   Donors are shown as "Anonymous" unless they tick *Show my name*.
 
+## Community member cards (digital ID)
+
+A printable **Rebuild Ancharo community member card** with photo and QR code. It is a campaign membership card and says
+**"Not a government ID"** on it in English and Amharic.
+
+- **Admin → ID cards**: register a person at the campaign desk (photo from file or the laptop/phone camera, name in English
+  and Amharic, sex, date of birth, kebele, role, blood type, emergency contact, Fayda number), see a live preview of the
+  front and back, then **print**: on an ID-card printer (PVC, 85.6 × 54 mm, one side per page) or on A4 paper (front and back
+  side by side with cut lines). Approve online applications, revoke lost cards, see how often each card was printed.
+- **Members** apply from **My account** (photo from their phone camera) and, once approved, see their card on their phone
+  (tap to turn it over, or show it full screen).
+- **QR code** → `/verify?c=…`: anyone who scans it sees whether the card is **valid, expired, revoked or not issued**, with the
+  name, photo, role and valid-until date, never phone numbers, Fayda numbers, birth dates or emergency contacts.
+  The code is random, so cards can't be guessed.
+- **Fayda**: admins can record a person's Fayda number (12 or 16 digits; visible only to admins and the person, never printed)
+  and tick *"I checked their Fayda card in person"*, which prints **✓ Fayda verified** on the card. A live "Verify with Fayda"
+  sign-in needs the campaign to be approved as a relying party by Ethiopia's National ID Program (they issue a client ID and
+  keys, and the check must run on a server). Once you have that access, it can be added on top.
+- The card design is in `js/idcard.js` (layout) and `css/styles.css` (look). The phone number and "issued by" name on the back
+  are set in **Admin → Settings**. If the site moves to another domain, add `siteUrl: "https://your-domain"` in `js/config.js`
+  *before* printing cards, because the QR codes contain the web address.
+
 ## Where to edit things
 
 Without Supabase, the numbers are set at the **top of `js/main.js`**. With Supabase connected, use **Admin → Settings** instead:

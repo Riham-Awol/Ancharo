@@ -89,6 +89,21 @@
       return file;
     }
   };
+  // Cut a photo (file, video frame or image) to passport shape 3:4, 600×800 JPEG.
+  live.cropPortrait = async (source) => {
+    const bmp = source instanceof HTMLVideoElement ? source : await createImageBitmap(source);
+    const w = bmp.videoWidth || bmp.width, h = bmp.videoHeight || bmp.height;
+    let cw = w, ch = Math.round(w * 4 / 3);
+    if (ch > h) { ch = h; cw = Math.round(h * 3 / 4); }
+    const sx = Math.round((w - cw) / 2), sy = Math.round((h - ch) * 0.3); // keep faces near the top
+    const c = document.createElement("canvas");
+    c.width = 600; c.height = 800;
+    const x = c.getContext("2d");
+    x.fillStyle = "#fff"; x.fillRect(0, 0, 600, 800);
+    x.drawImage(bmp, sx, sy, cw, ch, 0, 0, 600, 800);
+    const blob = await new Promise((r) => c.toBlob(r, "image/jpeg", 0.86));
+    return new File([blob], "photo.jpg", { type: "image/jpeg" });
+  };
   live.extOf = (file) => (file.type === "application/pdf" ? "pdf" : (file.type.split("/")[1] || "bin").replace("jpeg", "jpg").replace(/[^a-z0-9]/g, ""));
   live.randomId = () => Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
 

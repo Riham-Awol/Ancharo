@@ -91,6 +91,8 @@ The person signs in with `123456` and the site immediately asks them to choose a
   and on the **Get involved** page, where people can adopt them.
 - **Amharic:** every form in the admin panel has an optional **🇪🇹 Amharic version**. Fill it in and Amharic visitors see that text.
 
+- **Member cards:** in **Admin → Settings**, fill in the phone number and "issued by" name printed on the back of the cards.
+
 ### If you already ran an older version of `schema.sql`
 
 Just run the new file again the same way (SQL Editor → paste everything → Run). It adds the new parts and keeps your data.
