@@ -57,10 +57,26 @@
   }
   const STAMP = { sample: "SAMPLE · ናሙና", pending: "NOT YET ISSUED · ገና ያልተሰጠ", revoked: "REVOKED · ተሰርዟል", expired: "EXPIRED · ጊዜው ያለፈበት" };
 
+  // First / middle / last name (English + Amharic). Older cards only have full_name: split it.
+  function nameParts(card) {
+    const split = (s) => { const w = String(s || "").trim().split(/\s+/).filter(Boolean); return [w[0] || "", w[1] || "", w.slice(2).join(" ")]; };
+    const [f, m, l] = split(card.full_name), [fa, ma, la] = split(card.full_name_am);
+    const has = card.first_name || card.middle_name || card.last_name;
+    const hasAm = card.first_name_am || card.middle_name_am || card.last_name_am;
+    return {
+      first: has ? card.first_name || "" : f, middle: has ? card.middle_name || "" : m, last: has ? card.last_name || "" : l,
+      first_am: hasAm ? card.first_name_am || "" : fa, middle_am: hasAm ? card.middle_name_am || "" : ma, last_am: hasAm ? card.last_name_am || "" : la,
+    };
+  }
+  const joinName = (...parts) => parts.map((x) => String(x || "").trim()).filter(Boolean).join(" ");
+
   function front(card) {
     const [roleAm, color] = ROLES[card.role] || ROLES.Member;
     const st = status(card);
     const sex = SEX[card.sex];
+    const n = nameParts(card);
+    const nameRow = (label, en, am) =>
+      `<div class="idc__f idc__f--name"><dt>${label}</dt><dd><span class="idc__en">${esc((en || "—").toUpperCase())}</span>${am ? ` <span class="idc__am">${esc(am)}</span>` : ""}</dd></div>`;
     return `<div class="idc idc--front" translate="no" style="--role:${color}" data-status="${st}">
       <div class="idc__bg"></div>
       <header class="idc__head">
@@ -71,15 +87,17 @@
       <div class="idc__body">
         <div class="idc__photo">${photo(card)}</div>
         <dl class="idc__fields">
-          <div class="idc__f idc__f--name"><dt>Full name · ሙሉ ስም</dt><dd>${esc((card.full_name || "—").toUpperCase())}${card.full_name_am ? `<span class="idc__am">${esc(card.full_name_am)}</span>` : ""}</dd></div>
-          <div class="idc__f"><dt>Card No. · የካርድ ቁጥር</dt><dd class="idc__mono">${esc(card.card_number || "ANC-··-·····")}</dd></div>
-          <div class="idc__f"><dt>Role · ሚና</dt><dd>${esc(card.role || "Member")} · ${esc(roleAm)}</dd></div>
+          ${nameRow("First name · ስም", n.first, n.first_am)}
+          ${nameRow("Middle name · የአባት ስም", n.middle, n.middle_am)}
+          ${nameRow("Last name · የአያት ስም", n.last, n.last_am)}
           <div class="idc__f"><dt>Sex · ጾታ</dt><dd>${sex ? `${sex[0]} · ${sex[1]}` : "—"}</dd></div>
           <div class="idc__f"><dt>Date of birth · የትውልድ ቀን</dt><dd>${gc(card.date_of_birth)}</dd></div>
+          <div class="idc__f idc__f--wide"><dt>Role · ሚና</dt><dd>${esc(card.role || "Member")} · ${esc(roleAm)}</dd></div>
           <div class="idc__f"><dt>Issued · የተሰጠበት</dt><dd>${gc(card.issued_on)}<small>${ec(card.issued_on)}</small></dd></div>
           <div class="idc__f"><dt>Expires · የሚያበቃበት</dt><dd>${gc(card.expires_on)}<small>${ec(card.expires_on)}</small></dd></div>
         </dl>
         <div class="idc__side">
+          <div class="idc__no"><span>CARD NO. · የካርድ ቁጥር</span><b class="idc__mono">${esc(card.card_number || "ANC-··-·····")}</b></div>
           <div class="idc__seal"><span>${LOGO}</span></div>
           <div class="idc__ghost">${photo(card)}</div>
           <div class="idc__qr idc__qr--small">${qrSvg(verifyUrl(card))}</div>
@@ -130,11 +148,12 @@
 
   // A sample card for the Get involved page and empty previews
   const SAMPLE = {
-    sample: true, full_name: "Abebe Kebede", full_name_am: "አበበ ከበደ", card_number: "ANC-26-00001", role: "Volunteer",
-    sex: "M", date_of_birth: "1996-03-14", city: "Ancharo", subcity: "01", woreda: "02", kebele: "03", house_no: "1245", blood_type: "O+",
+    sample: true, full_name: "Abebe Kebede Tessema", full_name_am: "አበበ ከበደ ተሰማ", card_number: "ANC-26-00001", role: "Volunteer",
+    first_name: "Abebe", middle_name: "Kebede", last_name: "Tessema", first_name_am: "አበበ", middle_name_am: "ከበደ", last_name_am: "ተሰማ",
+    sex: "M", date_of_birth: "1996-03-14", city: "Ancharo", subcity: "Kalu", woreda: "Kalu", kebele: "Kebele 01", house_no: "1245", blood_type: "O+",
     emergency_name: "Almaz Kebede", emergency_phone: "+251 91 000 0000", fayda_verified: true,
     issued_on: "2026-11-09", expires_on: "2029-11-08", status: "active",
   };
 
-  window.IDCard = { front, back, verifyUrl, ROLES, SAMPLE, SITE, status, qrSvg, ec, gc };
+  window.IDCard = { front, back, verifyUrl, ROLES, SAMPLE, SITE, status, qrSvg, ec, gc, nameParts, joinName };
 })();

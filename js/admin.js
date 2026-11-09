@@ -892,7 +892,10 @@
       const v = (k) => String(f.get(k) || "").trim();
       return {
         ...(editing || {}),
-        full_name: v("full_name") || "Full name", full_name_am: v("full_name_am"), sex: v("sex"), date_of_birth: v("date_of_birth"),
+        first_name: v("first_name") || "First", middle_name: v("middle_name"), last_name: v("last_name"),
+        first_name_am: v("first_name_am"), middle_name_am: v("middle_name_am"), last_name_am: v("last_name_am"),
+        full_name: IDC.joinName(v("first_name"), v("middle_name"), v("last_name")) || "Full name",
+        full_name_am: IDC.joinName(v("first_name_am"), v("middle_name_am"), v("last_name_am")), sex: v("sex"), date_of_birth: v("date_of_birth"),
         phone: v("phone"), city: v("city"), subcity: v("subcity"), woreda: v("woreda"), kebele: v("kebele"), house_no: v("house_no"),
         role: v("role") || "Member", blood_type: v("blood_type"),
         emergency_name: v("emergency_name"), emergency_phone: v("emergency_phone"),
@@ -914,14 +917,16 @@
       newPhoto = null; newPhotoUrl = "";
       cardForm.reset();
       const d = c || { role: "Member", status: "active", issued_on: today(), expires_on: plusYears(3) };
-      for (const k of ["id", "full_name", "full_name_am", "sex", "date_of_birth", "phone", "city", "subcity", "woreda", "kebele", "house_no", "role", "blood_type", "emergency_name", "emergency_phone", "fayda_number", "issued_on", "expires_on", "status"])
+      const n = IDC.nameParts(d);
+      for (const k of ["first", "middle", "last", "first_am", "middle_am", "last_am"]) cardForm[k.replace(/(_am)?$/, "_name$1")].value = n[k] || "";
+      for (const k of ["id", "sex", "date_of_birth", "phone", "city", "subcity", "woreda", "kebele", "house_no", "role", "blood_type", "emergency_name", "emergency_phone", "fayda_number", "issued_on", "expires_on", "status"])
         if (cardForm[k]) cardForm[k].value = d[k] ?? "";
       cardForm.fayda_verified.checked = !!d.fayda_verified;
       $("[data-card-heading]").textContent = c ? `Card ${c.card_number}` : "Register a person";
       say($("[data-card-msg]"), "");
       preview();
       cardModal.hidden = false;
-      cardForm.full_name.focus();
+      cardForm.first_name.focus();
     }
     $("[data-card-new]").addEventListener("click", () => openEditor(null));
 
@@ -949,7 +954,7 @@
       const f = new FormData(cardForm);
       const v = (k) => String(f.get(k) || "").trim();
       const msg = $("[data-card-msg]");
-      if (!v("full_name")) return say(msg, T("Please enter the full name."), "error"), null;
+      if (!v("first_name")) return say(msg, T("Please enter the first name."), "error"), null;
       const fayda = v("fayda_number").replace(/\D/g, "");
       if (fayda && fayda.length !== 12 && fayda.length !== 16) return say(msg, T("A Fayda number has 12 or 16 digits."), "error"), null;
       const digits = live.normalizePhone(v("phone"));
@@ -957,7 +962,11 @@
       say(msg, "Saving…");
       try {
         const row = {
-          full_name: v("full_name"), full_name_am: v("full_name_am") || null, sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
+          first_name: v("first_name"), middle_name: v("middle_name") || null, last_name: v("last_name") || null,
+          first_name_am: v("first_name_am") || null, middle_name_am: v("middle_name_am") || null, last_name_am: v("last_name_am") || null,
+          full_name: IDC.joinName(v("first_name"), v("middle_name"), v("last_name")),
+          full_name_am: IDC.joinName(v("first_name_am"), v("middle_name_am"), v("last_name_am")) || null,
+          sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
           phone: digits ? live.formatPhone(digits) : v("phone") || null, role: v("role") || "Member",
           city: v("city") || null, subcity: v("subcity") || null, woreda: v("woreda") || null, kebele: v("kebele") || null, house_no: v("house_no") || null,
           blood_type: v("blood_type") || null, emergency_name: v("emergency_name") || null, emergency_phone: v("emergency_phone") || null,

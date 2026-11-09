@@ -717,6 +717,15 @@ create table if not exists public.member_cards (
   created_at         timestamptz not null default now(),
   updated_at         timestamptz
 );
+-- Name in three parts (first, middle = father's name, last = grandfather's name), in English and Amharic.
+-- full_name / full_name_am keep the whole name for lists, search and the card check page.
+alter table public.member_cards add column if not exists first_name text check (char_length(first_name) <= 60);
+alter table public.member_cards add column if not exists middle_name text check (char_length(middle_name) <= 60);
+alter table public.member_cards add column if not exists last_name text check (char_length(last_name) <= 60);
+alter table public.member_cards add column if not exists first_name_am text check (char_length(first_name_am) <= 60);
+alter table public.member_cards add column if not exists middle_name_am text check (char_length(middle_name_am) <= 60);
+alter table public.member_cards add column if not exists last_name_am text check (char_length(last_name_am) <= 60);
+
 -- Address printed on the back: city, sub-city, woreda, kebele, house number
 alter table public.member_cards add column if not exists city text check (char_length(city) <= 80);
 alter table public.member_cards add column if not exists subcity text check (char_length(subcity) <= 80);

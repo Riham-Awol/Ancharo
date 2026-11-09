@@ -20,7 +20,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;600;700&family=Noto+Serif+Ethiopic:wght@600;700&display=swap" rel="stylesheet" />
   <script src="js/i18n.js?v=f42a2118"></script>
-  <link rel="stylesheet" href="css/styles.css?v=fdcb69d4" />
+  <link rel="stylesheet" href="css/styles.css?v=28eaddbc" />
 </head>
 <body>
 
@@ -333,9 +333,15 @@
                 <div class="form-actions"><button type="button" class="btn btn--gold btn--small" data-snap>📸 Take photo</button><button type="button" class="link-btn" data-camera-stop>Cancel</button></div>
               </div>
             </div>
-            <div class="form-row">
-              <label>Full name<input name="full_name" maxlength="120" required /></label>
-              <label>Name in Amharic<input name="full_name_am" maxlength="120" lang="am" /></label>
+            <div class="form-row form-row--3">
+              <label>First name<input name="first_name" maxlength="60" required /></label>
+              <label>Middle name <span class="opt">(father)</span><input name="middle_name" maxlength="60" /></label>
+              <label>Last name <span class="opt">(grandfather)</span><input name="last_name" maxlength="60" /></label>
+            </div>
+            <div class="form-row form-row--3">
+              <label>ስም <span class="opt">(Amharic)</span><input name="first_name_am" maxlength="60" lang="am" /></label>
+              <label>የአባት ስም<input name="middle_name_am" maxlength="60" lang="am" /></label>
+              <label>የአያት ስም<input name="last_name_am" maxlength="60" lang="am" /></label>
             </div>
             <div class="form-row">
               <label>Sex<select name="sex"><option value="">—</option><option value="M">Male · ወንድ</option><option value="F">Female · ሴት</option></select></label>
@@ -463,9 +469,9 @@
 
   <script src="js/config.js?v=c62fa761"></script>
   <script src="js/vendor/qrcode.js?v=fbb6b69b"></script>
-  <script src="js/idcard.js?v=cb18c88e"></script>
+  <script src="js/idcard.js?v=71d64314"></script>
   <script src="js/main.js?v=243c6608"></script>
   <script src="js/live.js?v=4247fa48"></script>
-  <script src="js/admin.js?v=e6908638"></script>
+  <script src="js/admin.js?v=ad4f115a"></script>
 </body>
 </html>

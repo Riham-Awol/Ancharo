@@ -373,7 +373,10 @@
     const applyPreview = () => {
       const f = new FormData(cardForm);
       const v = (k) => String(f.get(k) || "").trim();
-      const c = { ...(myApp || {}), status: "pending", full_name: v("full_name") || profile.full_name || "", full_name_am: v("full_name_am"),
+      const c = { ...(myApp || {}), status: "pending",
+        first_name: v("first_name"), middle_name: v("middle_name"), last_name: v("last_name"),
+        first_name_am: v("first_name_am"), middle_name_am: v("middle_name_am"), last_name_am: v("last_name_am"),
+        full_name: IDC.joinName(v("first_name"), v("middle_name"), v("last_name")), full_name_am: IDC.joinName(v("first_name_am"), v("middle_name_am"), v("last_name_am")),
         sex: v("sex"), date_of_birth: v("date_of_birth"), city: v("city"), subcity: v("subcity"), woreda: v("woreda"), kebele: v("kebele"),
         house_no: v("house_no"), blood_type: v("blood_type"), role: "Member",
         emergency_name: v("emergency_name"), emergency_phone: v("emergency_phone"), photo_url: appPhotoUrl || (myApp && myApp.photo_url) || "" };
@@ -384,7 +387,9 @@
       cardForm.reset();
       appPhoto = null; appPhotoUrl = "";
       const d = app || { full_name: profile.full_name };
-      for (const k of ["full_name", "full_name_am", "sex", "date_of_birth", "city", "subcity", "woreda", "kebele", "house_no", "blood_type", "emergency_name", "emergency_phone", "fayda_number"]) cardForm[k].value = d[k] || "";
+      const n = IDC.nameParts(d);
+      for (const k of ["first", "middle", "last", "first_am", "middle_am", "last_am"]) cardForm[k.replace(/(_am)?$/, "_name$1")].value = n[k] || "";
+      for (const k of ["sex", "date_of_birth", "city", "subcity", "woreda", "kebele", "house_no", "blood_type", "emergency_name", "emergency_phone", "fayda_number"]) cardForm[k].value = d[k] || "";
       $("[data-apply-submit]").textContent = T(app ? "Save changes" : "Send application");
       $("[data-card-none]").hidden = true;
       $("[data-card-show]").hidden = true;
@@ -409,14 +414,19 @@
       e.preventDefault();
       const f = new FormData(cardForm);
       const v = (k) => String(f.get(k) || "").trim();
-      if (!v("full_name")) return say(cardMsg, T("Please enter the full name."), "error");
+      if (!v("first_name")) return say(cardMsg, T("Please enter the first name."), "error");
       if (!appPhoto && !(myApp && myApp.photo_url)) return say(cardMsg, T("Please add a photo of your face."), "error");
       const fayda = v("fayda_number").replace(/\D/g, "");
       if (fayda && fayda.length !== 12 && fayda.length !== 16) return say(cardMsg, T("A Fayda number has 12 or 16 digits."), "error");
       busy(cardForm, true);
       say(cardMsg, T("Sending…"));
       try {
-        const row = { full_name: v("full_name"), full_name_am: v("full_name_am") || null, sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
+        const row = {
+          first_name: v("first_name"), middle_name: v("middle_name") || null, last_name: v("last_name") || null,
+          first_name_am: v("first_name_am") || null, middle_name_am: v("middle_name_am") || null, last_name_am: v("last_name_am") || null,
+          full_name: IDC.joinName(v("first_name"), v("middle_name"), v("last_name")),
+          full_name_am: IDC.joinName(v("first_name_am"), v("middle_name_am"), v("last_name_am")) || null,
+          sex: v("sex") || null, date_of_birth: v("date_of_birth") || null,
           city: v("city") || null, subcity: v("subcity") || null, woreda: v("woreda") || null, kebele: v("kebele") || null, house_no: v("house_no") || null,
           blood_type: v("blood_type") || null, emergency_name: v("emergency_name") || null,
           emergency_phone: v("emergency_phone") || null, fayda_number: fayda || null, phone: live.formatPhone(profile.phone) || null };
