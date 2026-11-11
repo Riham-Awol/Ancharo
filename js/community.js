@@ -16,7 +16,7 @@
   const sample = document.querySelector("[data-sample-card]");
   if (sample && window.IDCard) {
     const c = { ...IDCard.SAMPLE, photo_url: (live && live.pageHref && live.pageHref("index").startsWith("/") ? "/" : "") + "images/sample-member.jpg" };
-    sample.querySelector(".idc-flip__inner").innerHTML = IDCard.front(c) + IDCard.back(c, { phone: "+251 00 000 0000" });
+    sample.querySelector(".idc-flip__inner").innerHTML = IDCard.front(c) + IDCard.back(c, { phone: "+251 97 256 7654" });
     const flip = () => sample.classList.toggle("is-flipped");
     sample.addEventListener("click", flip);
     sample.addEventListener("keydown", (e) => (e.key === "Enter" || e.key === " ") && (e.preventDefault(), flip()));

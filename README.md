@@ -100,11 +100,12 @@ Without Supabase, the numbers are set at the **top of `js/main.js`**. With Supab
 
 ## Before you publish: things to replace
 
-1. **Bank accounts** in `donate.html`. The numbers shown (`1000 0000 0000 0` etc.) are placeholders.
-   For each account, change **both** the number on screen **and** the `data-copy="..."` value on its Copy button.
-   Check that the bank names, branch and SWIFT code match your real accounts.
-2. **Fundraising numbers**: edit the `FUNDRAISER` block at the top of `js/main.js` (raised, goal, donors, currency, last updated).
-3. **Contact details**: `info@example.com` and `+251 00 000 0000` appear in the footer and on several pages. Find and replace them across all `.html` files.
+1. **Bank accounts** in `donate.html`: CBE `1000811094572` and Abay Bank `13396080002` are filled in.
+   Still to check: the **account name** ("Rebuild Ancharo Fund") and **branch** ("Ancharo Branch") shown on each card should match
+   exactly what the bank shows, and the **telebirr** card is hidden until its number is known (see the comment in `donate.html`).
+   When you change a number, change **both** the number on screen **and** the `data-copy="..."` value on its Copy button.
+2. **Fundraising numbers**: with Supabase connected, set them in **Admin → Settings**.
+3. **Contact details**: asda201819@gmail.com and +251 97 256 7654 (footer and several pages).
 4. **News and featured works**: the sample stories are examples. Edit or replace them with real updates.
 5. **Photos**: the images in `images/` are illustrated placeholders. Add real photos (e.g. `images/market-day.jpg`) and update the `src="..."` paths.
    The big home banner is `images/hero.jpg` (set in `css/styles.css` under `.hero`). Replace that file to change it.
