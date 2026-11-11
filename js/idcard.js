@@ -58,6 +58,8 @@
   }
   const verifyUrl = (card) => (card.sample ? `${SITE}/verify?c=sample` : `${SITE}/verify?c=${encodeURIComponent(card.verify_code || "")}`);
 
+  // Ancharo & Surrounding Development Association logo
+  const LOGO_IMG = (location.pathname.split("/").length > 2 ? "/" : "") + "images/logo-128.png";
   const LOGO = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#fff"/></svg>';
   const photo = (card) =>
     card.photo_url
@@ -98,7 +100,7 @@
     return `<div class="idc idc--front" translate="no" style="--role:${color}" data-status="${st}">
       <div class="idc__bg"></div>
       <header class="idc__head">
-        <span class="idc__logo">${LOGO}</span>
+        <span class="idc__logo"><img src="${LOGO_IMG}" alt="" /></span>
         <span class="idc__org"><strong>REBUILD ANCHARO</strong><span>አንቻሮን እንገንባ</span></span>
         <span class="idc__title">COMMUNITY MEMBER CARD<span>የአባልነት መታወቂያ</span></span>
       </header>
@@ -114,7 +116,7 @@
         </dl>
         <div class="idc__side">
           <div class="idc__no"><span>CARD NO. · የካርድ ቁጥር</span><b class="idc__mono">${esc(card.card_number || "ANC-··-·····")}</b></div>
-          <div class="idc__seal"><span>${LOGO}</span></div>
+          <div class="idc__seal"><span><img src="${LOGO_IMG}" alt="" /></span></div>
           <div class="idc__ghost">${photo(card)}</div>
         </div>
       </div>

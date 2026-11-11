@@ -998,8 +998,8 @@ body.home::before { animation: hero-zoom 18s ease-in-out infinite alternate; wil
   position: relative; display: flex; align-items: center; gap: 1.8cqw; padding: 2.1cqw 3.4cqw;
   background: linear-gradient(90deg, var(--role), color-mix(in srgb, var(--role) 65%, #0b120d)); color: #fff;
 }
-.idc__logo { width: 6.6cqw; height: 6.6cqw; border-radius: 1.6cqw; background: rgba(255,255,255,.18); display: grid; place-items: center; flex: none; }
-.idc__logo svg { width: 4.6cqw; height: 4.6cqw; }
+.idc__logo { width: 7.4cqw; height: 7.4cqw; border-radius: 50%; background: #fff; display: grid; place-items: center; flex: none; box-shadow: 0 .3cqw 1cqw rgba(0,0,0,.25); }
+.idc__logo img { width: 7cqw; height: 7cqw; object-fit: contain; }
 .idc__org { display: grid; line-height: 1.1; }
 .idc__org strong { font-size: 3.1cqw; letter-spacing: .07em; font-weight: 800; }
 .idc__org span { font-size: 2.4cqw; font-weight: 600; opacity: .95; }
@@ -1031,8 +1031,8 @@ body.home::before { animation: hero-zoom 18s ease-in-out infinite alternate; wil
   animation: idc-holo 7s linear infinite;
 }
 .idc__seal::after { content: ""; position: absolute; inset: 1.4cqw; border-radius: 50%; border: .25cqw dashed rgba(20,32,26,.25); }
-.idc__seal span { width: 6cqw; height: 6cqw; border-radius: 50%; background: var(--role); display: grid; place-items: center; }
-.idc__seal svg { width: 4cqw; height: 4cqw; }
+.idc__seal span { width: 8cqw; height: 8cqw; border-radius: 50%; background: #fff; display: grid; place-items: center; }
+.idc__seal img { width: 7.6cqw; height: 7.6cqw; object-fit: contain; }
 .idc__seal::after { inset: 1.1cqw !important; }
 @keyframes idc-holo { to { filter: hue-rotate(360deg); } }
 .idc__ghost { width: 9cqw; aspect-ratio: 3 / 4; border-radius: .8cqw; overflow: hidden; opacity: .4; filter: grayscale(1) contrast(1.1); }
@@ -1164,3 +1164,17 @@ body.home::before { animation: hero-zoom 18s ease-in-out infinite alternate; wil
 /* barcode of the card number, bottom right of the front */
 .idc__barcode { margin-left: auto; width: 50cqw; height: 6.2cqw; display: block; }
 .idc__barcode svg { display: block; width: 100%; height: 100%; border-radius: .4cqw; }
+
+/* association logo */
+.brand__logo { width: 46px; height: 46px; object-fit: contain; flex: none; filter: drop-shadow(0 2px 6px rgba(0,0,0,.18)); }
+.site-footer .brand__logo { width: 64px; height: 64px; }
+.footer-org { font-size: .9rem; opacity: .9; }
+.footer-org span { display: block; font-family: "Noto Sans Ethiopic", sans-serif; margin-top: 2px; }
+@media (max-width: 820px) { .brand__logo { width: 40px; height: 40px; } }
+
+/* About: who we are */
+.org { display: grid; grid-template-columns: minmax(0, 380px) 1fr; gap: 50px; align-items: center; }
+.org__logo { width: 100%; max-width: 380px; margin: 0 auto; filter: drop-shadow(0 18px 30px rgba(20,30,24,.18)); }
+.org__name { font-family: "Noto Sans Ethiopic", sans-serif; font-weight: 700; color: var(--green); font-size: 1.15rem; margin-top: -6px; }
+@media (max-width: 820px) { .org { grid-template-columns: 1fr; gap: 24px; text-align: center; } .org__logo { max-width: 260px; } .org .values { text-align: left; } }
+html[lang="am"] .org__name { display: none; }

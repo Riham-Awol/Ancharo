@@ -14,12 +14,13 @@
   <meta property="og:image" content="https://ancharo.vercel.app/images/og-image.jpg" />
   <meta property="og:url" content="https://ancharo.vercel.app/" />
   <meta name="twitter:card" content="summary_large_image" />
-  <link rel="icon" href="images/favicon.svg" type="image/svg+xml" />
+  <link rel="icon" href="images/favicon-64.png" type="image/png" />
+  <link rel="apple-touch-icon" href="images/apple-touch-icon.png" />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=Noto+Sans+Ethiopic:wght@400;600;700&family=Noto+Serif+Ethiopic:wght@600;700&display=swap" rel="stylesheet" />
   <script src="js/i18n.js?v=f42a2118"></script>
-  <link rel="stylesheet" href="css/styles.css?v=38a0d861" />
+  <link rel="stylesheet" href="css/styles.css?v=0d9c1d97" />
 </head>
 <body>
 
@@ -27,7 +28,7 @@
   <header class="site-header">
     <nav class="container nav" aria-label="Main">
       <a class="brand" href="index.html">
-        <span class="brand__mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#faf6ef"/></svg></span>
+        <img class="brand__logo" src="images/logo-128.png" alt="" width="46" height="46" />
         <span class="brand__name">Ancharo</span>
       </a>
       <button class="nav__toggle" aria-label="Open menu" aria-expanded="false">
@@ -53,6 +54,23 @@
     </section>
 
     <section class="section">
+      <div class="container org">
+        <img class="org__logo reveal" src="images/logo-720.webp" alt="Logo of the Ancharo &amp; Surrounding Development Association" width="380" height="380" />
+        <div class="reveal">
+          <span class="eyebrow">Who we are</span>
+          <h2>Ancharo &amp; Surrounding Development Association</h2>
+          <p class="org__name" lang="am">አንቻሮ እና አካባቢው ልማት ማህበር</p>
+          <p class="lead">Rebuild Ancharo is run by the Ancharo &amp; Surrounding Development Association: people from Ancharo and the villages around it, working together for the development of our area.</p>
+          <p>Every donation, project and member card on this website is managed by the association, and the money raised and spent is reported openly on this site.</p>
+          <div class="hero__actions">
+            <a class="btn btn--green" href="donate.html">Support the association</a>
+            <a class="btn btn--ghost" href="community.html#member-card">Become a member</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section section--sand">
       <div class="container split">
         <div class="reveal">
           <span class="eyebrow">Our story</span>
@@ -132,10 +150,11 @@
       <div class="footer-grid">
         <div>
           <a class="brand" href="index.html">
-            <span class="brand__mark"><svg width="22" height="22" viewBox="0 0 24 24" fill="none"><circle cx="15" cy="8" r="3.2" fill="#d9a441"/><path d="M1 20 L8 11 L12 15 L16 12 L23 20 Z" fill="#faf6ef"/></svg></span>
+            <img class="brand__logo" src="images/logo-128.png" alt="" width="46" height="46" />
             <span class="brand__name">Ancharo</span>
           </a>
           <p>A community effort to rebuild and renew our city, for the people who live here today and the generations to come.</p>
+          <p class="footer-org">A campaign of the <strong>Ancharo &amp; Surrounding Development Association</strong><span lang="am">አንቻሮ እና አካባቢው ልማት ማህበር</span></p>
         </div>
         <div>
           <h4>Explore</h4>

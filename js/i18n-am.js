@@ -265,6 +265,15 @@ I18N.add(
     "Ancharo's market district": "የአንቻሮ የገበያ ሰፈር",
     "Ancharo at dawn": "አንቻሮ በንጋት",
 
+    "Who we are": "እኛ ማን ነን",
+    "Ancharo & Surrounding Development Association": "አንቻሮ እና አካባቢው ልማት ማህበር",
+    "Logo of the Ancharo & Surrounding Development Association": "የአንቻሮ እና አካባቢው ልማት ማህበር አርማ",
+    "Rebuild Ancharo is run by the Ancharo & Surrounding Development Association: people from Ancharo and the villages around it, working together for the development of our area.": "አንቻሮን እንገንባ የሚመራው በአንቻሮ እና አካባቢው ልማት ማህበር ነው፤ ለአካባቢያችን ልማት በጋራ የሚሰሩ የአንቻሮ እና በዙሪያዋ ያሉ መንደሮች ሰዎች።",
+    "Every donation, project and member card on this website is managed by the association, and the money raised and spent is reported openly on this site.": "በዚህ ድረ-ገጽ ላይ ያለው እያንዳንዱ ልገሳ፣ ፕሮጀክት እና የአባልነት ካርድ በማህበሩ ይተዳደራል፤ የተሰበሰበውና የወጣው ገንዘብም በዚህ ድረ-ገጽ ላይ በግልጽ ይቀርባል።",
+    "Support the association": "ማህበሩን ይደግፉ",
+    "Become a member": "አባል ይሁኑ",
+    "A campaign of the <strong>Ancharo &amp; Surrounding Development Association</strong><span lang=\"am\">አንቻሮ እና አካባቢው ልማት ማህበር</span>": "የ<strong>አንቻሮ እና አካባቢው ልማት ማህበር</strong> ዘመቻ",
+
     /* ---------- donate ---------- */
     "Send any amount to one of the accounts below. Every birr goes into roads, schools, water and light for our city.": "ማንኛውንም መጠን ከታች ካሉት ሂሳቦች ወደ አንዱ ይላኩ። እያንዳንዱ ብር ለከተማችን መንገድ፣ ትምህርት ቤት፣ ውሃ እና መብራት ይውላል።",
     "Bank accounts": "የባንክ ሂሳቦች",
